@@ -1,0 +1,17 @@
+Options +ExecCGI
+AddHandler cgi-script .cgi
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # If the request is for a real file or directory, serve it
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # Otherwise, send everything to the CGI
+    RewriteRule ^api/(.*)$ index.cgi/api/$1 [L,QSA]
+    
+    # Frontend fallback for SPA
+    RewriteRule ^ index.html [L]
+</IfModule>

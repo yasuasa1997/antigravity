@@ -1,0 +1,682 @@
+openapi: 3.1.0
+info:
+  # linterエラーになるが表示しせたくないためコメントアウト
+  # title: jinjer API ドキュメント
+  # version: 2024-01-23
+  # license:
+  #   name: MIT
+  #   url: https://opensource.org/licenses/MIT
+  x-logo:
+    url: "./assets/images/ogp.png"
+  description:
+    $ref: ./info-description.md
+tags:
+  - name: アクセストークン
+    description: "API を利用するためのアクセストークンを取り扱います。"
+  - name: 従業員
+    description: "従業員情報を取り扱います。"
+  - name: 従業員 社員番号
+    description: "従業員に紐づく社員番号を取り扱います。"
+  - name: 従業員 住所
+    description: "従業員に紐づく住所情報を取り扱います。 "
+  - name: 従業員 住民票住所
+    description: "従業員に紐づく住民票住所情報を取り扱います。"
+  - name: 従業員 緊急連絡先
+    description: "従業員に紐づく緊急連絡先情報を取り扱います。"
+  - name: 従業員 家族
+    description: "従業員に紐づく家族情報を取り扱います。"
+  - name: 従業員 世帯主情報
+    description: "従業員に紐づく世帯主情報を取り扱います。"
+  - name: 従業員 通勤関連
+    description: "従業員に紐づく通勤関連情報を取り扱います。"
+  - name: 従業員 銀行口座
+    description: "従業員に紐づく銀行口座情報を取り扱います。"
+  - name: 従業員 各種課税
+    description: "従業員に紐づく各種課税を取り扱います。"
+  - name: 従業員 給与単価
+    description: "従業員に紐づく給与単価情報を取り扱います。"
+  - name: 従業員 賞与単価
+    description: "従業員に紐づく賞与単価を取り扱います。"
+  - name: 従業員 給与振込設定
+    description: "従業員に紐づく給与振込設定情報を取り扱います。"
+  - name: 従業員 賞与振込設定
+    description: "従業員に紐づく賞与振込設定を取り扱います。"
+  - name: 従業員 社会保険・労働保険
+    description: "従業員に紐づく社会保険・労働保険情報を取り扱います。"
+  - name: 従業員 報酬月額
+    description: "従業員に紐づく報酬月額を取り扱います。"
+  - name: 従業員 事業所社保・労保
+    description: "従業員に紐づく事業所社保・労保を取り扱います。"
+  - name: 従業員 主務
+    description: "従業員に紐づく主務情報を取り扱います。"
+  - name: 従業員 兼務
+    description: "従業員に紐づく兼務情報を取り扱います。"
+  - name: 従業員 学歴
+    description: "従業員に紐づく学歴 情報を取り扱います。"
+  - name: 従業員 職歴
+    description: "従業員に紐づく職歴を取り扱います。"
+  - name: 従業員 職歴 中途情報
+    description: "従業員に紐づく職歴 中途情報を取り扱います。"
+  - name: 従業員 採用
+    description: "従業員に紐づく採用を取り扱います。"
+  - name: 従業員 資格・免許
+    description: "従業員に紐づく資格・免許を取り扱います。"
+  - name: 従業員 評価
+    description: "従業員に紐づく評価を取り扱います。"
+  - name: 従業員 評価結果
+    description: "従業員に紐づく評価結果を取り扱います。"
+  - name: 従業員 研修
+    description: "従業員に紐づく研修を取り扱います。"
+  - name: 従業員 賞罰
+    description: "従業員に紐づく賞罰を取り扱います。"
+  - name: 従業員 労働契約
+    description: "従業員に紐づく労働契約を取り扱います。"
+  - name: 従業員 人事労務タグ
+    description: "従業員に紐づく人事労務タグ情報を取り扱います。"
+  - name: 従業員 勤怠タグ
+    description: "従業員に紐づく勤怠タグ情報を取り扱います。"
+  - name: 従業員 休職
+    description: "従業員に紐づく休職情報を取り扱います。"
+  - name: 従業員 勤怠
+    description: "従業員に紐づく勤怠情報を取り扱います。"
+  - name: 従業員 外部サービス連携
+    description: "従業員に紐づく外部サービス連携を取り扱います。"
+  - name: 従業員 ログイン関連
+    description: "従業員に紐づくログイン関連を取り扱います。"
+  - name: 従業員 福利厚生連携設定
+    description: "従業員に紐づく福利厚生連携設定情報を取り扱います。"
+  - name: 従業員 カスタム項目
+    description: "従業員に紐づくカスタム項目を取り扱います。"
+  - name: 従業員 カスタム項目（項目追加）
+    description: "従業員に紐づくカスタム項目（項目追加）情報を取り扱います。"
+  - name: 従業員 カスタム項目（項目羅列）
+    description: "従業員に紐づくカスタム項目（項目羅列）情報を取り扱います。"
+  - name: 従業員 勤怠基本情報
+    description: "従業員に紐づく勤怠基本情報を取り扱います。"
+  - name: 従業員 特別休暇
+    description: "従業員に紐づく特別休暇を取り扱います。"
+  - name: 従業員 勤務データ（月締め）
+    description: "従業員に紐づく勤務データ（月締め）情報を取り扱います。"
+  - name: 従業員 勤務データ（日締め）
+    description: "従業員に紐づく勤務データ（日締め）情報を取り扱います。"
+  - name: 従業員 打刻データ
+    description: "従業員に紐づく打刻データ情報を取り扱います。"
+  - name: 従業員 シフトデータ
+    description: "従業員に紐づくシフトデータ情報を取り扱います。"
+  - name: 従業員 休日休暇データ
+    description: "従業員に紐づく休日休暇データ情報を取り扱います。"
+  - name: 従業員 振休代休データ
+    description: "従業員に紐づく振休代休データ情報を取り扱います。"
+  - name: 従業員 入退館・PCログデータ
+    description: "従業員に紐づく入退館・PCログデータ情報を取り扱います。"
+  - name: 従業員 給与計算結果
+    description: "従業員に紐づく給与計算結果を取り扱います。"
+  - name: 従業員 賞与計算結果
+    description: "従業員に紐づく賞与計算結果を取り扱います。"
+  - name: 従業員 年調結果照会
+    description: "従業員に紐づく年調結果照会情報を取り扱います。"
+  - name: 従業員 通知
+    description: "従業員に紐づく通知を取り扱います。"
+  - name: 従業員 プロフィール写真
+    description: "従業員に紐づくプロフィール写真を取り扱います。"
+  - name: ファイルアップロード
+    description: "ファイルアップロードを取り扱います。"
+  - name: ワークフロー 申請区分/申請フォーム
+    description: "申請区分/申請フォームを取り扱います。"
+  - name: ワークフロー 申請書
+    description: "申請書を取り扱います。"
+  - name: ワークフロー 申請書 カスタム申請
+    description: "申請書 カスタム申請を取り扱います。"
+  - name: ワークフロー 申請書 入社申請
+    description: "申請書 入社申請を取り扱います。"
+  - name: ワークフロー 申請書 異動申請（主務）
+    description: "申請書 異動申請（主務）を取り扱います。"
+  - name: ワークフロー 申請書 異動申請（兼務）
+    description: "申請書 異動申請（兼務）を取り扱います。"
+  - name: ワークフロー 申請書 退社申請
+    description: "申請書 退社申請を取り扱います。"
+  - name: ワークフロー 申請書 扶養変更申請
+    description: "申請書 扶養変更申請を取り扱います。"
+  - name: ワークフロー 申請書 住所・通勤費変更申請
+    description: "申請書 住所・通勤費変更申請を取り扱います。"
+  - name: 人事 出力テンプレート
+    description: "人事 出力テンプレート情報を取り扱います。"
+  - name: 人事 エクスポート
+    description: "人事 エクスポートを取り扱います。"
+  - name: 人事 入力テンプレート
+    description: "人事 入力テンプレートを取り扱います。"
+  - name: 人事 インポート
+    description: "人事 インポートを取り扱います。"
+  - name: 勤怠 日次打刻データ
+    description: "勤怠 日次打刻データ情報を取り扱います。"
+  - name: 勤怠 日次ログデータ
+    description: "勤怠 日次入退館・PCログデータ情報を取り扱います。"
+  - name: 勤怠 出力フォーマット
+    description: "勤怠 出力フォーマットを取り扱います。"
+  - name: 勤怠 エクスポート
+    description: "勤怠 エクスポートを取り扱います。"
+  - name: 勤怠 インポート
+    description: "勤怠 インポートを取り扱います。"
+  - name: 給与 出力テンプレート
+    description: "給与 出力テンプレートを取り扱います。"
+  - name: 給与 エクスポート
+    description: "給与 エクスポートを取り扱います。"
+  - name: 経費 仕訳データ
+    description: "経費 仕訳データを取り扱います。"
+  - name: 経費 出力フォーマット
+    description: "経費 出力フォーマット情報を取り扱います。"
+  - name: 経費 エクスポート
+    description: "経費 エクスポートを取り扱います。"
+  - name: 所属グループ
+    description: "所属グループ情報を取り扱います。"
+  - name: 所属グループ タグ
+    description: "所属グループタグ情報を取り扱います。"
+  - name: 階層マスタ
+    description: "階層マスタ情報を取り扱います。"
+  - name: 企業情報
+    description: "企業情報を取り扱います。"
+  - name: 企業情報 企業銀行
+    description: "企業情報 企業銀行を取り扱います。"
+  - name: 出身地マスタ
+    description: "出身地マスタを取り扱います。 "
+  - name: 雇用区分マスタ
+    description: "雇用区分マスタを取り扱います。"
+  - name: 転勤可否区分マスタ
+    description: "転勤可否区分マスタを取り扱います。"
+  - name: 単身赴任区分マスタ
+    description: "単身赴任区分マスタを取り扱います。"
+  - name: 退職区分マスタ
+    description: "退職区分マスタを取り扱います。 "
+  - name: 退職理由マスタ
+    description: "退職理由マスタを取り扱います。 "
+  - name: 住居区分マスタ
+    description: "住居区分マスタを取り扱います。"
+  - name: 続柄マスタ
+    description: "続柄マスタを取り扱います。"
+  - name: 給与支給単価マスタ
+    description: "給与支給単価マスタを取り扱います。"
+  - name: 給与控除単価マスタ
+    description: "給与控除単価マスタを取り扱います。 "
+  - name: 給与勤怠単価マスタ
+    description: "給与勤怠単価マスタを取り扱います。 "
+  - name: 賞与控除単価マスタ
+    description: "賞与控除単価マスタを取り扱います。"
+  - name: グレードマスタ
+    description: "グレードマスタを取り扱います。  "
+  - name: 納付先情報 市区町村マスタ
+    description: "納付先情報 市区町村マスタを取り扱います。"
+  - name: 納付先情報 納付元会社マスタ
+    description: "納付先情報 納付元会社マスタを取り扱います。"
+  - name: 在留資格マスタ
+    description: "在留資格マスタを取り扱います。"
+  - name: 事業所マスタ
+    description: "事業所マスタ情報を取り扱います。"
+  - name: 社保事業所マスタ
+    description: "社保事業所マスタを取り扱います。"
+  - name: 労保事業所マスタ
+    description: "労保事業所マスタ情報を取り扱います。"
+  - name: 異動区分マスタ
+    description: "異動区分マスタを取り扱います。 "
+  - name: 勤務地マスタ
+    description: "勤務地マスタを取り扱います。 "
+  - name: 役職マスタ
+    description: "役職マスタを取り扱います。"
+  - name: 職種マスタ
+    description: "職種マスタを取り扱います。 "
+  - name: 職務マスタ
+    description: "職務マスタを取り扱います。  "
+  - name: 任意項目マスタ
+    description: "任意項目マスタを取り扱います。 "
+  - name: 打刻グループマスタ
+    description: "打刻グループマスタを取り扱います。"
+  - name: 計上部門マスタ
+    description: "計上部門マスタを取り扱います。 "
+  - name: 入卒区分マスタ
+    description: "入卒区分マスタを取り扱います。 "
+  - name: 学歴区分マスタ
+    description: "学歴区分マスタを取り扱います。 "
+  - name: 公私区分マスタ
+    description: "公私区分マスタを取り扱います。 "
+  - name: 文理区分マスタ
+    description: "文理区分マスタを取り扱います。 "
+  - name: 業種マスタ
+    description: "業種マスタを取り扱います。 "
+  - name: 採用区分マスタ
+    description: "採用区分マスタを取り扱います。 "
+  - name: 採用地マスタ
+    description: "採用地マスタを取り扱います。 "
+  - name: 採用経路マスタ
+    description: "採用経路マスタを取り扱います。 "
+  - name: 免許資格区分マスタ
+    description: "免許資格区分マスタを取り扱います。 "
+  - name: 研修区分マスタ
+    description: "研修区分マスタを取り扱います。 "
+  - name: 主催者マスタ
+    description: "主催者マスタを取り扱います。 "
+  - name: 研修名称マスタ
+    description: "研修名称マスタを取り扱います。 "
+  - name: 修了区分マスタ
+    description: "修了区分マスタを取り扱います。 "
+  - name: 成績マスタ
+    description: "成績マスタを取り扱います。 "
+  - name: 表彰区分マスタ
+    description: "表彰区分マスタを取り扱います。 "
+  - name: 懲罰区分マスタ
+    description: "懲罰区分マスタを取り扱います。 "
+  - name: 適用事項マスタ
+    description: "適用事項マスタを取り扱います。 "
+  - name: 従業員タグマスタ
+    description: "従業員タグマスタを取り扱います。 "
+  - name: 組織タグマスタ
+    description: "組織タグマスタを取り扱います。 "
+  - name: 勤怠タグマスタ
+    description: "勤怠タグマスタを取り扱います。 "
+  - name: 休職区分マスタ
+    description: "休職区分マスタを取り扱います。 "
+  - name: 共通マスタ
+    description: "共通マスタを取り扱います。 "
+  - name: 就業規則設定
+    description: "就業規則設定を取り扱います。 "
+  - name: 36協定設定
+    description: "36協定設定を取り扱います。 "
+  - name: スケジュール雛形設定
+    description: "スケジュール雛形設定情報を取り扱います。 "
+  - name: 自動休憩設定
+    description: "自動休憩設定を取り扱います。 "
+  - name: 年次有給休暇設定
+    description: "年次有給休暇設定を取り扱います。 "
+  - name: 振休設定
+    description: "振休設定を取り扱います。 "
+  - name: 代休設定
+    description: "代休設定を取り扱います。 "
+  - name: 特別休暇設定
+    description: "特別休暇設定を取り扱います。 "
+  - name: 半休設定
+    description: "半休設定情報を取り扱います。 "
+  - name: 給与体系マスタ
+    description: "給与体系マスタを取り扱います。"
+  - name: 給与テーブル
+    description: "給与テーブルを取り扱います。"
+  - name: プロジェクト
+    description: "プロジェクトを取り扱います。"
+  - name: プロジェクト カテゴリ
+    description: "プロジェクト カテゴリを取り扱います。"
+  - name: 評価結果項目
+    description: "評価結果項目を取り扱います。"
+  - name: カスタム項目マスタ
+    description: "カスタム項目マスタ情報を取り扱います。 "
+  - name: ロールマスタ
+    description: "ロールマスタを取り扱います。 "
+  - name: 市区町村マスタ
+    description: "市区町村マスタを取り扱います。"
+  - name: 都道府県マスタ
+    description: "都道府県マスタを取り扱います。 "
+  - name: 保険者マスタ
+    description: "保険者マスタを取り扱います。 "
+  - name: 労務提出先マスタ
+    description: "労務提出先マスタを取り扱います。 "
+  - name: 労災業種マスタ
+    description: "労災業種マスタを取り扱います。"
+  - name: APIリクエストログ
+    description: "APIリクエストログを取り扱います。 "
+servers:
+  - url: "https://api.jinjer.biz"
+paths:
+  "/v2/token":
+    $ref: paths/v2/token.yaml
+  "/v1/token":
+    $ref: paths/get_token.yaml
+  "/v1/employees":
+    $ref: paths/employees/employees.yaml
+  "/v1/employees/employee-ids":
+    $ref: paths/employees/employee-ids.yaml
+  "/v1/employees/addresses":
+    $ref: paths/employees/addresses.yaml
+  "/v1/employees/residence-addresses":
+    $ref: paths/employees/residence-addresses.yaml
+  "/v1/employees/emergency-contacts":
+    $ref: paths/employees/emergency-contacts.yaml
+  "/v1/employees/dependents":
+    $ref: paths/employees/dependents.yaml
+  "/v1/employees/head-households":
+    $ref: paths/employees/head-households.yaml
+  "/v1/employees/commuting-information":
+    $ref: paths/employees/commuting-information.yaml
+  "/v1/employees/bank-accounts":
+    $ref: paths/employees/bank-accounts.yaml
+  "/v1/employees/taxations":
+    $ref: paths/employees/taxations.yaml
+  "/v1/employees/bonuses":
+    $ref: paths/employees/bonuses.yaml
+  "/v1/employees/payroll-transfer-settings":
+    $ref: paths/employees/payroll-transfer-settings.yaml
+  "/v1/employees/bonus-transfer-settings":
+    $ref: paths/employees/bonus-transfer-settings.yaml
+  "/v1/employees/social-and-labor-insurances":
+    $ref: paths/employees/social-and-labor-insurances.yaml
+  "/v1/employees/social-and-labor-insurances/{id}":
+    $ref: paths/employees/social-and-labor-insurances-detail.yaml
+  "/v1/employees/monthly-remunerations":
+    $ref: paths/employees/monthly-remunerations.yaml
+  "/v1/employees/salary-statements":
+    $ref: paths/employees/salary-statements.yaml
+  "/v1/employees/bonus-statements":
+    $ref: paths/employees/bonus-statements.yaml
+  "/v1/employees/year-end-adjustments":
+    $ref: paths/employees/year-end-adjustments.yaml
+  "/v1/employees/social-and-labor-insurance-offices":
+    $ref: paths/employees/social-and-labor-insurance-offices.yaml
+  "/v1/employees/affiliations":
+    $ref: paths/employees/affiliations.yaml
+  "/v1/employees/sub-affiliations":
+    $ref: paths/employees/sub-affiliations.yaml
+  "/v1/employees/educational-backgrounds":
+    $ref: paths/employees/educational-backgrounds.yaml
+  "/v1/employees/work-experiences":
+    $ref: paths/employees/work-experiences.yaml
+  "/v1/employees/work-experiences/{id}":
+    $ref: paths/employees/work-experiences-details.yaml
+  "/v1/employees/classify-experiences":
+    $ref: paths/employees/classify-experiences.yaml
+  "/v1/employees/adoptions":
+    $ref: paths/employees/adoptions.yaml
+  "/v1/employees/adoptions/{id}":
+    $ref: paths/employees/adoptions-detail.yaml
+  "/v1/employees/qualifications":
+    $ref: paths/employees/qualifications.yaml
+  "/v1/employees/qualifications/{id}":
+    $ref: paths/employees/qualifications-detail.yaml
+  "/v1/employees/evaluations":
+    $ref: paths/employees/evaluations.yaml
+  "/v1/employees/evaluation-results/{id}":
+    $ref: paths/employees/evaluation-results-detail.yaml
+  "/v1/employees/induction-courses":
+    $ref: paths/employees/induction-courses.yaml
+  "/v1/employees/induction-courses/{id}":
+    $ref: paths/employees/induction-courses-detail.yaml
+  "/v1/employees/rewards-and-punishments":
+    $ref: paths/employees/rewards-and-punishments.yaml
+  "/v1/employees/labor-contracts":
+    $ref: paths/employees/labor-contracts.yaml
+  "/v1/employees/labor-contracts/{id}":
+    $ref: paths/employees/labor-contracts-detail.yaml
+  "/v1/employees/tags":
+    $ref: paths/employees/tags.yaml
+  "/v1/employees/kintai-tags":
+    $ref: paths/employees/kintai-tags.yaml
+  "/v1/employees/absences":
+    $ref: paths/employees/absences.yaml
+  "/v1/employees/labor-hour-settings":
+    $ref: paths/employees/labor-hour-settings.yaml
+  "/v1/employees/external-services":
+    $ref: paths/employees/external-services.yaml
+  "/v1/employees/login-settings":
+    $ref: paths/employees/login-settings.yaml
+  "/v1/employees/custom-items":
+    $ref: paths/employees/custom-items.yaml
+  "/v1/employees/addible-custom-items":
+    $ref: paths/employees/addible-custom-items.yaml
+  "/v1/employees/addible-custom-items/{id}":
+    $ref: paths/employees/addible-custom-items-details.yaml
+  "/v1/employees/general-custom-items":
+    $ref: paths/employees/general-custom-items.yaml
+  "/v1/employees/general-custom-items/{id}":
+    $ref: paths/employees/general-custom-items-details.yaml
+  "/v1/employees/daily-work-data":
+    $ref: paths/employees/daily-work-data.yaml
+  "/v1/employees/attendance-settings":
+    $ref: paths/employees/attendance-settings.yaml
+  "/v1/employees/attendance-settings/{id}":
+    $ref: paths/employees/attendance-settings-details.yaml
+  "/v1/employees/special-holidays":
+    $ref: paths/employees/special-holidays.yaml
+  "/v1/employees/monthly-work-data":
+    $ref: paths/employees/monthly-work-data.yaml
+  "/v2/employees/attendances":
+    $ref: paths/v2/employees/attendances.yaml
+  "/v1/employees/attendances":
+    $ref: paths/employees/attendances.yaml
+  "/v2/employees/work-schedules":
+    $ref: paths/v2/employees/work-schedules.yaml
+  "/v1/employees/work-schedules":
+    $ref: paths/employees/work-schedules.yaml
+  "/v2/employees/requested-day-offs":
+    $ref: paths/v2/employees/requested-day-offs.yaml
+  "/v1/employees/requested-day-offs":
+    $ref: paths/employees/requested-day-offs.yaml
+  "/v2/employees/converted-day-offs":
+    $ref: paths/v2/employees/converted-day-offs.yaml
+  "/v1/employees/converted-day-offs":
+    $ref: paths/employees/converted-day-offs.yaml
+  "/v2/employees/work-logs":
+    $ref: paths/v2/employees/work-logs.yaml
+  "/v1/employees/work-logs":
+    $ref: paths/employees/work-logs.yaml
+  "/v1/employees/notifications/{id}":
+    $ref: paths/employees/notifications-details.yaml
+  "/v1/employees/profile-pictures/{id}":
+    $ref: paths/employees/profile-pictures.yaml
+  "/v1/employees/benefit-settings":
+    $ref: paths/employees/benefit-settings.yaml
+  "/v1/async/files":
+    $ref: paths/async/files.yaml
+  "/v1/master/request-categories/request-forms":
+    $ref: paths/master/request-categories/request-forms.yaml
+  "/v1/workflow-requests":
+    $ref: paths/workflow-requests/workflow-requests.yaml
+  "/v1/workflow-requests/custom-requests/{id}":
+    $ref: paths/workflow-requests/custom-requests-details.yaml
+  "/v1/workflow-requests/onboardings/{id}":
+    $ref: paths/workflow-requests/onboardings-details.yaml
+  "/v1/workflow-requests/affiliation-changes/{id}":
+    $ref: paths/workflow-requests/affiliation-changes-details.yaml
+  "/v1/workflow-requests/sub-affiliation-changes/{id}":
+    $ref: paths/workflow-requests/sub-affiliation-changes.yaml
+  "/v1/workflow-requests/offboardings/{id}":
+    $ref: paths/workflow-requests/offboardings-details.yaml
+  "/v1/workflow-requests/dependent-changes/{id}":
+    $ref: paths/workflow-requests/dependent-changes-details.yaml
+  "/v1/workflow-requests/address-changes/{id}":
+    $ref: paths/workflow-requests/address-changes-details.yaml
+  "/v1/master/jinji-export-templates":
+    $ref: paths/master/jinji-export-templates.yaml
+  "/v1/jinji-exports":
+    $ref: paths/jinji-exports/jinji-exports.yaml
+  "/v1/jinji-exports/{id}":
+    $ref: paths/jinji-exports/jinji-exports-detail.yaml
+  "/v1/master/jinji-import-templates":
+    $ref: paths/master/jinji-import-templates.yaml
+  "/v1/jinji-imports":
+    $ref: paths/jinji-imports/jinji-imports.yaml
+  "/v1/kintai-daily-attendances":
+    $ref: paths/kintai-daily-attendances/kintai-daily-attendances.yaml
+  "/v1/kintai-daily-work-logs":
+    $ref: paths/kintai-daily-work-logs/kintai-daily-work-logs.yaml
+  "/v1/master/kintai-export-formats":
+    $ref: paths/kintai-export-formats/kintai-export-formats.yaml
+  "/v1/kintai-exports":
+    $ref: paths/kintai-exports/kintai-exports.yaml
+  "/v1/kintai-exports/{id}":
+    $ref: paths/kintai-exports/kintai-exports-detail.yaml
+  "/v1/kintai-imports":
+    $ref: paths/kintai-imports/kintai-imports.yaml
+  "/v1/master/salary-export-templates":
+    $ref: paths/master/salary-export-templates.yaml
+  "/v1/salary-exports":
+    $ref: paths/salary-exports/salary-exports.yaml
+  "/v1/salary-exports/{id}":
+    $ref: paths/salary-exports/salary-exports-detail.yaml
+  "/v1/expense-journals":
+    $ref: paths/expense-journals/expense-journals.yaml
+  "/v1/master/expense-export-formats":
+    $ref: paths/master/expense-export-formats.yaml
+  "/v1/expense-exports":
+    $ref: paths/expense-exports/expense-exports.yaml
+  "/v1/expense-exports/{id}":
+    $ref: paths/expense-exports/expense-exports-detail.yaml
+  "/v1/departments":
+    $ref: paths/departments/department.yaml
+  "/v1/departments/{id}":
+    $ref: paths/departments/department-detail.yaml
+  "/v1/departments/tags":
+    $ref: paths/departments/tags.yaml
+  "/v1/master/hierarchies":
+    $ref: paths/master/hierarchies.yaml
+  "/v1/companies":
+    $ref: paths/companies/companies.yaml
+  "/v1/companies/bank-accounts":
+    $ref: paths/companies/bank-accounts.yaml
+  "/v1/master/birthplaces":
+    $ref: paths/master/birthplaces.yaml
+  "/v1/master/employment-classifications":
+    $ref: paths/master/employment-classifications.yaml
+  "/v1/master/transfer-requests":
+    $ref: paths/master/transfer-requests.yaml
+  "/v1/master/solo-transfer-classifications":
+    $ref: paths/master/solo-transfer-classifications.yaml
+  "/v1/master/retirement-classifications":
+    $ref: paths/master/retirement-classifications.yaml
+  "/v1/master/retirement-reasons":
+    $ref: paths/master/retirement-reasons.yaml
+  "/v1/master/residential-classifications":
+    $ref: paths/master/residential-classifications.yaml
+  "/v1/master/relationships":
+    $ref: paths/master/relationships.yaml
+  "/v1/employees/salaries":
+    $ref: paths/employees/salaries.yaml
+  "/v1/master/salary-deduction-units":
+    $ref: paths/master/salary-deduction-units.yaml
+  "/v1/master/salary-attendance-units":
+    $ref: paths/master/salary-attendance-units.yaml
+  "/v1/master/bonus-deduction-units":
+    $ref: paths/master/bonus-deduction-units.yaml
+  "/v1/master/employee-grades":
+    $ref: paths/master/employee-grades.yaml
+  "/v1/master/payment-municipalities":
+    $ref: paths/master/payment-municipalities.yaml
+  "/v1/master/payment-companies":
+    $ref: paths/master/payment-companies.yaml
+  "/v1/master/residence-statuses":
+    $ref: paths/master/residence-statuses.yaml
+  "/v1/master/social-and-labor-insurance-offices":
+    $ref: paths/master/social-and-labor-insurance-offices.yaml
+  "/v1/master/social-insurance-offices":
+    $ref: paths/master/social-insurance-offices.yaml
+  "/v1/master/social-insurance-offices/{id}":
+    $ref: paths/master/social-insurance-offices-detail.yaml
+  "/v1/master/labor-insurance-offices":
+    $ref: paths/master/labor-insurance-offices.yaml
+  "/v1/master/labor-insurance-offices/{id}":
+    $ref: paths/master/labor-insurance-offices-detail.yaml
+  "/v1/master/change-classifications":
+    $ref: paths/master/change-classifications.yaml
+  "/v1/master/work-locations":
+    $ref: paths/master/work-locations.yaml
+  "/v1/master/employee-posts":
+    $ref: paths/master/employee-posts.yaml
+  "/v1/master/job-classifications":
+    $ref: paths/master/job-classifications.yaml
+  "/v1/master/duty-classifications":
+    $ref: paths/master/duty-classifications.yaml
+  "/v1/master/optional-classifications":
+    $ref: paths/master/optional-classifications.yaml
+  "/v1/stores":
+    $ref: paths/stores.yaml
+  "/v1/master/accounting-departments":
+    $ref: paths/master/accounting-departments.yaml
+  "/v1/master/education-event-classifications":
+    $ref: paths/master/education-event-classifications.yaml
+  "/v1/master/education-classifications":
+    $ref: paths/master/education-classifications.yaml
+  "/v1/master/education-management-classifications":
+    $ref: paths/master/education-management-classifications.yaml
+  "/v1/master/education-department-classifications":
+    $ref: paths/master/education-department-classifications.yaml
+  "/v1/master/industries":
+    $ref: paths/master/industries.yaml
+  "/v1/master/adoption-classifications":
+    $ref: paths/master/adoption-classifications.yaml
+  "/v1/master/adoption-regions":
+    $ref: paths/master/adoption-regions.yaml
+  "/v1/master/adoption-routes":
+    $ref: paths/master/adoption-routes.yaml
+  "/v1/master/qualification-classifications":
+    $ref: paths/master/qualification-classifications.yaml
+  "/v1/master/training-classifications":
+    $ref: paths/master/training-classifications.yaml
+  "/v1/master/training-organizers":
+    $ref: paths/master/training-organizers.yaml
+  "/v1/master/training-names":
+    $ref: paths/master/training-names.yaml
+  "/v1/master/training-completion-classifications":
+    $ref: paths/master/training-completion-classifications.yaml
+  "/v1/master/training-results":
+    $ref: paths/master/training-results.yaml
+  "/v1/master/reward-classifications":
+    $ref: paths/master/reward-classifications.yaml
+  "/v1/master/punishment-classifications":
+    $ref: paths/master/punishment-classifications.yaml
+  "/v1/master/application-matters":
+    $ref: paths/master/application-matters.yaml
+  "/v1/master/employee-tags":
+    $ref: paths/master/employee-tags.yaml
+  "/v1/master/department-tags":
+    $ref: paths/master/department-tags.yaml
+  "/v1/master/kintai-tags":
+    $ref: paths/master/kintai-tags.yaml
+  "/v1/master/absence-classifications":
+    $ref: paths/master/absence-classifications.yaml
+  "/v1/master/master-setting-details":
+    $ref: paths/master/master-setting-details.yaml
+  "/v1/employment-rule-settings":
+    $ref: paths/employment-rule-settings/employment-rule-settings.yaml
+  "/v1/article-36-agreement-settings":
+    $ref: paths/article-36-agreement-settings/article-36-agreement-settings.yaml
+  "/v1/schedule-templates":
+    $ref: paths/schedule-templates/schedule-templates.yaml
+  "/v1/auto-break-settings":
+    $ref: paths/auto-break-settings/auto-break-settings.yaml
+  "/v1/annual-paid-leave-settings":
+    $ref: paths/annual-paid-leave-settings/annual-paid-leave-settings.yaml
+  "/v1/conversion-leave-settings":
+    $ref: paths/conversion-leave-settings/conversion-leave-settings.yaml
+  "/v1/compensation-leave-settings":
+    $ref: paths/compensation-leave-settings/compensation-leave-settings.yaml
+  "/v1/special-holiday-settings":
+    $ref: paths/special-holiday-settings/special-holiday-settings.yaml
+  "/v1/half-day-off-settings":
+    $ref: paths/half-day-off-settings/half-day-off-settings.yaml
+  "/v1/master/salary-systems":
+    $ref: paths/master/salary-systems.yaml
+  "/v1/master/salary-units":
+    $ref: paths/master/salary-units.yaml
+  "/v1/master/salary-tables":
+    $ref: paths/master/salary-tables.yaml
+  "/v1/master/evaluation-integrates":
+    $ref: paths/master/evaluation-integrates.yaml
+  "/v1/master/projects":
+    $ref: paths/master/projects.yaml
+  "/v1/master/project-categories":
+    $ref: paths/master/project-categories.yaml
+  "/v1/master/custom-menus":
+    $ref: paths/master/custom-menus.yaml
+  "/v1/master/roles":
+    $ref: paths/master/roles.yaml
+  "/v1/master/municipalities":
+    $ref: paths/master/municipalities.yaml
+  "/v1/master/prefectures":
+    $ref: paths/master/prefectures.yaml
+  "/v1/master/insurers":
+    $ref: paths/master/insurers.yaml
+  "/v1/master/submission-places":
+    $ref: paths/master/submission-places.yaml
+  "/v1/master/labor-industries":
+    $ref: paths/master/labor-industries.yaml
+  "/v1/api-logs":
+    $ref: paths/api-logs/api-logs.yaml
+components:
+  securitySchemes:
+    ApplicationJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
