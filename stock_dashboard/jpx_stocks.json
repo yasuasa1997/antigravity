@@ -1,0 +1,882 @@
+[
+  {
+    "symbol": "1301.T",
+    "name": "極洋"
+  },
+  {
+    "symbol": "1332.T",
+    "name": "ニッスイ"
+  },
+  {
+    "symbol": "1605.T",
+    "name": "INPEX"
+  },
+  {
+    "symbol": "1801.T",
+    "name": "大成建"
+  },
+  {
+    "symbol": "1802.T",
+    "name": "大林組"
+  },
+  {
+    "symbol": "1803.T",
+    "name": "清水建"
+  },
+  {
+    "symbol": "1808.T",
+    "name": "長谷工"
+  },
+  {
+    "symbol": "1812.T",
+    "name": "鹿島"
+  },
+  {
+    "symbol": "1925.T",
+    "name": "大和ハウス"
+  },
+  {
+    "symbol": "1928.T",
+    "name": "積水ハウス"
+  },
+  {
+    "symbol": "1963.T",
+    "name": "日揮HD"
+  },
+  {
+    "symbol": "2002.T",
+    "name": "日清粉G"
+  },
+  {
+    "symbol": "2267.T",
+    "name": "ヤクルト"
+  },
+  {
+    "symbol": "2269.T",
+    "name": "明治HD"
+  },
+  {
+    "symbol": "2282.T",
+    "name": "日本ハム"
+  },
+  {
+    "symbol": "2432.T",
+    "name": "DeNA"
+  },
+  {
+    "symbol": "2502.T",
+    "name": "アサヒ"
+  },
+  {
+    "symbol": "2503.T",
+    "name": "キリンHD"
+  },
+  {
+    "symbol": "2531.T",
+    "name": "宝HD"
+  },
+  {
+    "symbol": "2782.T",
+    "name": "セリア"
+  },
+  {
+    "symbol": "2801.T",
+    "name": "キッコマン"
+  },
+  {
+    "symbol": "2802.T",
+    "name": "味の素"
+  },
+  {
+    "symbol": "2871.T",
+    "name": "ニチレイ"
+  },
+  {
+    "symbol": "2914.T",
+    "name": "JT"
+  },
+  {
+    "symbol": "3088.T",
+    "name": "マツキヨココ"
+  },
+  {
+    "symbol": "3092.T",
+    "name": "ZOZO"
+  },
+  {
+    "symbol": "3099.T",
+    "name": "三越伊勢丹"
+  },
+  {
+    "symbol": "3382.T",
+    "name": "セブン&アイ"
+  },
+  {
+    "symbol": "3401.T",
+    "name": "帝人"
+  },
+  {
+    "symbol": "3402.T",
+    "name": "東レ"
+  },
+  {
+    "symbol": "3405.T",
+    "name": "クラレ"
+  },
+  {
+    "symbol": "3407.T",
+    "name": "旭化成"
+  },
+  {
+    "symbol": "3861.T",
+    "name": "王子HD"
+  },
+  {
+    "symbol": "3863.T",
+    "name": "日本製紙"
+  },
+  {
+    "symbol": "4004.T",
+    "name": "レゾナック"
+  },
+  {
+    "symbol": "4005.T",
+    "name": "住友化学"
+  },
+  {
+    "symbol": "4021.T",
+    "name": "日産化学"
+  },
+  {
+    "symbol": "4042.T",
+    "name": "東ソー"
+  },
+  {
+    "symbol": "4061.T",
+    "name": "デンカ"
+  },
+  {
+    "symbol": "4063.T",
+    "name": "信越化学"
+  },
+  {
+    "symbol": "4151.T",
+    "name": "協和キリン"
+  },
+  {
+    "symbol": "4183.T",
+    "name": "三井化学"
+  },
+  {
+    "symbol": "4188.T",
+    "name": "三菱ケミG"
+  },
+  {
+    "symbol": "4208.T",
+    "name": "UBE"
+  },
+  {
+    "symbol": "4324.T",
+    "name": "電通G"
+  },
+  {
+    "symbol": "4452.T",
+    "name": "花王"
+  },
+  {
+    "symbol": "4502.T",
+    "name": "武田薬品"
+  },
+  {
+    "symbol": "4503.T",
+    "name": "アステラス"
+  },
+  {
+    "symbol": "4506.T",
+    "name": "住友ファーマ"
+  },
+  {
+    "symbol": "4507.T",
+    "name": "塩野義"
+  },
+  {
+    "symbol": "4519.T",
+    "name": "中外製薬"
+  },
+  {
+    "symbol": "4523.T",
+    "name": "エーザイ"
+  },
+  {
+    "symbol": "4543.T",
+    "name": "テルモ"
+  },
+  {
+    "symbol": "4568.T",
+    "name": "第一三共"
+  },
+  {
+    "symbol": "4578.T",
+    "name": "大塚HD"
+  },
+  {
+    "symbol": "4661.T",
+    "name": "オリエンタルランド"
+  },
+  {
+    "symbol": "4689.T",
+    "name": "LINEヤフー"
+  },
+  {
+    "symbol": "4704.T",
+    "name": "トレンドマイクロ"
+  },
+  {
+    "symbol": "4751.T",
+    "name": "サイバーエイド"
+  },
+  {
+    "symbol": "4755.T",
+    "name": "楽天G"
+  },
+  {
+    "symbol": "4901.T",
+    "name": "富士フイルム"
+  },
+  {
+    "symbol": "4902.T",
+    "name": "コニカミノルタ"
+  },
+  {
+    "symbol": "4911.T",
+    "name": "資生堂"
+  },
+  {
+    "symbol": "5019.T",
+    "name": "出光興産"
+  },
+  {
+    "symbol": "5020.T",
+    "name": "ENEOS"
+  },
+  {
+    "symbol": "5101.T",
+    "name": "横浜ゴム"
+  },
+  {
+    "symbol": "5108.T",
+    "name": "ブリヂストン"
+  },
+  {
+    "symbol": "5201.T",
+    "name": "AGC"
+  },
+  {
+    "symbol": "5214.T",
+    "name": "日電硝"
+  },
+  {
+    "symbol": "5233.T",
+    "name": "太平洋セメ"
+  },
+  {
+    "symbol": "5301.T",
+    "name": "東海カーボン"
+  },
+  {
+    "symbol": "5332.T",
+    "name": "TOTO"
+  },
+  {
+    "symbol": "5333.T",
+    "name": "日本ガイシ"
+  },
+  {
+    "symbol": "5401.T",
+    "name": "日本製鉄"
+  },
+  {
+    "symbol": "5406.T",
+    "name": "神戸製鋼"
+  },
+  {
+    "symbol": "5411.T",
+    "name": "JFE"
+  },
+  {
+    "symbol": "5541.T",
+    "name": "大平洋金属"
+  },
+  {
+    "symbol": "5631.T",
+    "name": "日本製鋼所"
+  },
+  {
+    "symbol": "5703.T",
+    "name": "日軽金HD"
+  },
+  {
+    "symbol": "5706.T",
+    "name": "三井金属"
+  },
+  {
+    "symbol": "5707.T",
+    "name": "東邦亜鉛"
+  },
+  {
+    "symbol": "5711.T",
+    "name": "三菱マテ"
+  },
+  {
+    "symbol": "5713.T",
+    "name": "住友金属鉱山"
+  },
+  {
+    "symbol": "5714.T",
+    "name": "DOWA"
+  },
+  {
+    "symbol": "5801.T",
+    "name": "古河電工"
+  },
+  {
+    "symbol": "5802.T",
+    "name": "住友電工"
+  },
+  {
+    "symbol": "5803.T",
+    "name": "フジクラ"
+  },
+  {
+    "symbol": "5901.T",
+    "name": "東洋製罐G"
+  },
+  {
+    "symbol": "6098.T",
+    "name": "リクルート"
+  },
+  {
+    "symbol": "6103.T",
+    "name": "オークマ"
+  },
+  {
+    "symbol": "6113.T",
+    "name": "アマダ"
+  },
+  {
+    "symbol": "6301.T",
+    "name": "小松製作所"
+  },
+  {
+    "symbol": "6302.T",
+    "name": "住友重機"
+  },
+  {
+    "symbol": "6305.T",
+    "name": "日立建機"
+  },
+  {
+    "symbol": "6326.T",
+    "name": "クボタ"
+  },
+  {
+    "symbol": "6361.T",
+    "name": "荏原製作所"
+  },
+  {
+    "symbol": "6367.T",
+    "name": "ダイキン"
+  },
+  {
+    "symbol": "6471.T",
+    "name": "日本精工"
+  },
+  {
+    "symbol": "6472.T",
+    "name": "NTN"
+  },
+  {
+    "symbol": "6473.T",
+    "name": "ジェイテクト"
+  },
+  {
+    "symbol": "6501.T",
+    "name": "日立"
+  },
+  {
+    "symbol": "6502.T",
+    "name": "東芝"
+  },
+  {
+    "symbol": "6503.T",
+    "name": "三菱電機"
+  },
+  {
+    "symbol": "6504.T",
+    "name": "富士電機"
+  },
+  {
+    "symbol": "6506.T",
+    "name": "安川電機"
+  },
+  {
+    "symbol": "6674.T",
+    "name": "GSユアサ"
+  },
+  {
+    "symbol": "6701.T",
+    "name": "NEC"
+  },
+  {
+    "symbol": "6702.T",
+    "name": "富士通"
+  },
+  {
+    "symbol": "6703.T",
+    "name": "OKI"
+  },
+  {
+    "symbol": "6723.T",
+    "name": "ルネサス"
+  },
+  {
+    "symbol": "6724.T",
+    "name": "エプソン"
+  },
+  {
+    "symbol": "6752.T",
+    "name": "パナソニック"
+  },
+  {
+    "symbol": "6753.T",
+    "name": "シャープ"
+  },
+  {
+    "symbol": "6758.T",
+    "name": "ソニーG"
+  },
+  {
+    "symbol": "6762.T",
+    "name": "TDK"
+  },
+  {
+    "symbol": "6770.T",
+    "name": "アルプスアルパイン"
+  },
+  {
+    "symbol": "6841.T",
+    "name": "横河電機"
+  },
+  {
+    "symbol": "6857.T",
+    "name": "アドバンテスト"
+  },
+  {
+    "symbol": "6902.T",
+    "name": "デンソー"
+  },
+  {
+    "symbol": "6920.T",
+    "name": "レーザーテック"
+  },
+  {
+    "symbol": "6952.T",
+    "name": "カシオ"
+  },
+  {
+    "symbol": "6954.T",
+    "name": "ファナック"
+  },
+  {
+    "symbol": "6971.T",
+    "name": "京セラ"
+  },
+  {
+    "symbol": "6976.T",
+    "name": "太陽誘電"
+  },
+  {
+    "symbol": "6981.T",
+    "name": "村田製作所"
+  },
+  {
+    "symbol": "6988.T",
+    "name": "日東電工"
+  },
+  {
+    "symbol": "7003.T",
+    "name": "三井E&S"
+  },
+  {
+    "symbol": "7004.T",
+    "name": "日立造船"
+  },
+  {
+    "symbol": "7011.T",
+    "name": "三菱重工"
+  },
+  {
+    "symbol": "7012.T",
+    "name": "川崎重工"
+  },
+  {
+    "symbol": "7013.T",
+    "name": "IHI"
+  },
+  {
+    "symbol": "7182.T",
+    "name": "ゆうちょ銀行"
+  },
+  {
+    "symbol": "7186.T",
+    "name": "コンコルディア"
+  },
+  {
+    "symbol": "7201.T",
+    "name": "日産自"
+  },
+  {
+    "symbol": "7202.T",
+    "name": "いすゞ"
+  },
+  {
+    "symbol": "7203.T",
+    "name": "トヨタ"
+  },
+  {
+    "symbol": "7205.T",
+    "name": "日野自"
+  },
+  {
+    "symbol": "7211.T",
+    "name": "三菱自"
+  },
+  {
+    "symbol": "7261.T",
+    "name": "マツダ"
+  },
+  {
+    "symbol": "7267.T",
+    "name": "ホンダ"
+  },
+  {
+    "symbol": "7269.T",
+    "name": "スズキ"
+  },
+  {
+    "symbol": "7270.T",
+    "name": "SUBARU"
+  },
+  {
+    "symbol": "7272.T",
+    "name": "ヤマハ発"
+  },
+  {
+    "symbol": "7731.T",
+    "name": "ニコン"
+  },
+  {
+    "symbol": "7733.T",
+    "name": "オリンパス"
+  },
+  {
+    "symbol": "7735.T",
+    "name": "SCREEN"
+  },
+  {
+    "symbol": "7741.T",
+    "name": "HOYA"
+  },
+  {
+    "symbol": "7751.T",
+    "name": "キヤノン"
+  },
+  {
+    "symbol": "7752.T",
+    "name": "リコー"
+  },
+  {
+    "symbol": "7762.T",
+    "name": "シチズン"
+  },
+  {
+    "symbol": "7832.T",
+    "name": "バンナムHD"
+  },
+  {
+    "symbol": "7911.T",
+    "name": "凸版印刷"
+  },
+  {
+    "symbol": "7912.T",
+    "name": "大日本印刷"
+  },
+  {
+    "symbol": "7951.T",
+    "name": "ヤマハ"
+  },
+  {
+    "symbol": "8001.T",
+    "name": "伊藤忠"
+  },
+  {
+    "symbol": "8002.T",
+    "name": "丸紅"
+  },
+  {
+    "symbol": "8015.T",
+    "name": "豊田通商"
+  },
+  {
+    "symbol": "8031.T",
+    "name": "三井物産"
+  },
+  {
+    "symbol": "8035.T",
+    "name": "東エレク"
+  },
+  {
+    "symbol": "8053.T",
+    "name": "住友商事"
+  },
+  {
+    "symbol": "8058.T",
+    "name": "三菱商事"
+  },
+  {
+    "symbol": "8233.T",
+    "name": "高島屋"
+  },
+  {
+    "symbol": "8252.T",
+    "name": "丸井G"
+  },
+  {
+    "symbol": "8253.T",
+    "name": "クレディセゾン"
+  },
+  {
+    "symbol": "8267.T",
+    "name": "イオン"
+  },
+  {
+    "symbol": "8304.T",
+    "name": "あおぞら銀"
+  },
+  {
+    "symbol": "8306.T",
+    "name": "三菱UFJ"
+  },
+  {
+    "symbol": "8308.T",
+    "name": "りそなHD"
+  },
+  {
+    "symbol": "8309.T",
+    "name": "三井住友トラスト"
+  },
+  {
+    "symbol": "8316.T",
+    "name": "三井住友FG"
+  },
+  {
+    "symbol": "8331.T",
+    "name": "千葉銀"
+  },
+  {
+    "symbol": "8354.T",
+    "name": "ふくおかFG"
+  },
+  {
+    "symbol": "8411.T",
+    "name": "みずほFG"
+  },
+  {
+    "symbol": "8601.T",
+    "name": "大和証券G"
+  },
+  {
+    "symbol": "8604.T",
+    "name": "野村HD"
+  },
+  {
+    "symbol": "8628.T",
+    "name": "松井証券"
+  },
+  {
+    "symbol": "8630.T",
+    "name": "SOMPO"
+  },
+  {
+    "symbol": "8697.T",
+    "name": "日本取引所G"
+  },
+  {
+    "symbol": "8725.T",
+    "name": "MS&AD"
+  },
+  {
+    "symbol": "8750.T",
+    "name": "第一生命HD"
+  },
+  {
+    "symbol": "8766.T",
+    "name": "東京海上"
+  },
+  {
+    "symbol": "8795.T",
+    "name": "T&D"
+  },
+  {
+    "symbol": "8801.T",
+    "name": "三井不動産"
+  },
+  {
+    "symbol": "8802.T",
+    "name": "三菱地所"
+  },
+  {
+    "symbol": "8804.T",
+    "name": "東京建物"
+  },
+  {
+    "symbol": "8830.T",
+    "name": "住友不動産"
+  },
+  {
+    "symbol": "9001.T",
+    "name": "東武"
+  },
+  {
+    "symbol": "9005.T",
+    "name": "東急"
+  },
+  {
+    "symbol": "9007.T",
+    "name": "小田急"
+  },
+  {
+    "symbol": "9008.T",
+    "name": "京王"
+  },
+  {
+    "symbol": "9009.T",
+    "name": "京成"
+  },
+  {
+    "symbol": "9020.T",
+    "name": "JR東日本"
+  },
+  {
+    "symbol": "9021.T",
+    "name": "JR西日本"
+  },
+  {
+    "symbol": "9022.T",
+    "name": "JR東海"
+  },
+  {
+    "symbol": "9041.T",
+    "name": "近鉄GHD"
+  },
+  {
+    "symbol": "9042.T",
+    "name": "阪急阪神"
+  },
+  {
+    "symbol": "9062.T",
+    "name": "日本通運"
+  },
+  {
+    "symbol": "9064.T",
+    "name": "ヤマトHD"
+  },
+  {
+    "symbol": "9101.T",
+    "name": "日本郵船"
+  },
+  {
+    "symbol": "9104.T",
+    "name": "商船三井"
+  },
+  {
+    "symbol": "9107.T",
+    "name": "川崎汽船"
+  },
+  {
+    "symbol": "9201.T",
+    "name": "JAL"
+  },
+  {
+    "symbol": "9202.T",
+    "name": "ANA"
+  },
+  {
+    "symbol": "9432.T",
+    "name": "NTT"
+  },
+  {
+    "symbol": "9433.T",
+    "name": "KDDI"
+  },
+  {
+    "symbol": "9434.T",
+    "name": "ソフトバンク"
+  },
+  {
+    "symbol": "9501.T",
+    "name": "東電HD"
+  },
+  {
+    "symbol": "9502.T",
+    "name": "中部電力"
+  },
+  {
+    "symbol": "9503.T",
+    "name": "関西電力"
+  },
+  {
+    "symbol": "9531.T",
+    "name": "東京ガス"
+  },
+  {
+    "symbol": "9532.T",
+    "name": "大阪ガス"
+  },
+  {
+    "symbol": "9602.T",
+    "name": "東宝"
+  },
+  {
+    "symbol": "9613.T",
+    "name": "NTTデータ"
+  },
+  {
+    "symbol": "9681.T",
+    "name": "東京ドーム"
+  },
+  {
+    "symbol": "9735.T",
+    "name": "セコム"
+  },
+  {
+    "symbol": "9766.T",
+    "name": "コナミG"
+  },
+  {
+    "symbol": "9843.T",
+    "name": "ニトリHD"
+  },
+  {
+    "symbol": "9983.T",
+    "name": "ファーストリテイリング"
+  },
+  {
+    "symbol": "9984.T",
+    "name": "ソフトバンクG"
+  },
+  {
+    "symbol": "9997.T",
+    "name": "ベルーナ"
+  }
+]

@@ -5,6 +5,8 @@ import database
 import config
 import time
 import stock_api
+import json
+import os
 
 # Page config
 st.set_page_config(
@@ -12,6 +14,16 @@ st.set_page_config(
     page_icon="📈",
     layout="wide"
 )
+
+# --- Data Loading ---
+@st.cache_data
+def load_jpx_stocks():
+    """Loads TSE listed stocks from JSON file."""
+    json_path = "jpx_stocks.json"
+    if os.path.exists(json_path):
+        with open(json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
 
 # --- CSS for price flash animations ---
 st.markdown("""
@@ -185,6 +197,50 @@ selected_tickers = st.sidebar.multiselect(
     format_func=format_ticker
 )
 
+# TSE Stock Browser [NEW]
+st.sidebar.markdown("---")
+st.sidebar.subheader("🏢 東証銘柄ブラウザ")
+jpx_stocks = load_jpx_stocks()
+if jpx_stocks:
+    # Format for display: [Code] [Name]
+    stock_options = [f"[{s['symbol'].replace('.T', '')}] {s['name']}" for s in jpx_stocks]
+    selected_stock_label = st.sidebar.selectbox(
+        "銘柄を選択して追加",
+        options=[""] + stock_options,
+        index=0,
+        key="jpx_browser_selectbox"
+    )
+    
+    if selected_stock_label:
+        # Extract symbol from label: [Code] Name -> Code.T
+        import re
+        match = re.search(r'\[(\d+)\]', selected_stock_label)
+        if match:
+            code = match.group(1)
+            symbol = f"{code}.T"
+            
+            # Find name in original list
+            name = next((s['name'] for s in jpx_stocks if s['symbol'] == symbol), "")
+            
+            if st.sidebar.button(f"➕ {name} ({symbol}) を追加"):
+                with st.spinner(f"{symbol} のデータを取得中..."):
+                    data = stock_api.get_ticker_data(symbol)
+                    if data:
+                        # Use the name from jpx_stocks if API name is generic
+                        final_name = name or data['name']
+                        if database.add_ticker(symbol, final_name):
+                            if data['price']:
+                                database.insert_price(symbol, data['price'])
+                            st.sidebar.success(f"追加しました: {symbol} ({final_name})")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.sidebar.error("DBへの追加に失敗しました")
+                    else:
+                        st.sidebar.error("株価データの取得に失敗しました")
+else:
+    st.sidebar.info("銘柄リストが見つかりません。")
+
 # Load data
 df = database.get_all_data_df()
 
@@ -242,10 +298,7 @@ if not df.empty:
             name = symbol_map.get(ticker, '')
             
             # Yahoo Finance Link
-            if ticker.endswith('.T'):
-                yf_url = f"https://finance.yahoo.co.jp/quote/{ticker}"
-            else:
-                yf_url = f"https://finance.yahoo.com/quote/{ticker}"
+            yf_url = f"https://finance.yahoo.co.jp/quote/{ticker}"
             
             with cols[i % len(cols)]:
                 st.markdown(f"""
@@ -259,29 +312,82 @@ if not df.empty:
                 </a>
                 """, unsafe_allow_html=True)
 
-    # Display Charts
-    st.subheader("Price History")
+    # --- Price History Section ---
+    st.markdown("---")
+    st.subheader("📊 Price History")
+    
+    # Interval selection
+    interval_options = {
+        "5分": {"interval": "5m", "period": "1d", "tickformat": "%H:%M", "dtick": 15*60*1000},
+        "1時間": {"interval": "1h", "period": "5d", "tickformat": "%m/%d %H:%M", "dtick": 6*3600*1000},
+        "1日": {"interval": "1d", "period": "1mo", "tickformat": "%m/%d", "dtick": 86400000},
+        "1週間": {"interval": "1wk", "period": "6mo", "tickformat": "%m/%d", "dtick": 604800000}
+    }
+    
+    selected_interval_label = st.radio(
+        "表示間隔設定",
+        options=list(interval_options.keys()),
+        index=2, # Default to 1 day
+        horizontal=True
+    )
+    
+    config_params = interval_options[selected_interval_label]
     
     # Create two columns: Chart and Raw Data
     col1, col2 = st.columns([3, 1])
 
     with col1:
-        if not df_filtered.empty:
-            fig = px.line(
-                df_filtered, 
-                x="timestamp", 
-                y="price", 
-                color="ticker", 
-                title="Stock Prices Over Time",
-                markers=True
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        if selected_tickers:
+            with st.spinner("データを取得中..."):
+                hist_dfs = []
+                for ticker in selected_tickers:
+                    # Fetch historical data from API
+                    h_df = stock_api.get_historical_prices(
+                        ticker, 
+                        interval=config_params['interval'], 
+                        period=config_params['period']
+                    )
+                    if not h_df.empty:
+                        hist_dfs.append(h_df)
+                
+                if hist_dfs:
+                    df_hist = pd.concat(hist_dfs)
+                    fig = px.line(
+                        df_hist, 
+                        x="timestamp", 
+                        y="price", 
+                        color="ticker", 
+                        title=f"Stock Prices ({selected_interval_label}間隔)",
+                        markers=True if config_params['interval'] in ['1d', '1wk'] else False,
+                        template="plotly_dark"
+                    )
+                    
+                    # Refine X-axis
+                    fig.update_xaxes(
+                        rangeslider_visible=True, # Roller for sliding
+                        tickformat=config_params['tickformat'],
+                        dtick=config_params['dtick'],
+                        gridcolor='rgba(255,255,255,0.1)'
+                    )
+                    
+                    fig.update_layout(
+                        hovermode="x unified",
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                        margin=dict(l=0, r=0, t=40, b=0)
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("選択された銘柄の履歴データが見つかりませんでした。")
         else:
-            st.info("No data available for selected tickers.")
+            st.info("表示する銘柄を選択してください。")
 
     with col2:
-        st.subheader("Raw Data")
-        st.dataframe(df_filtered.sort_values('timestamp', ascending=False).head(50), use_container_width=True)
+        st.subheader("Raw Data (DB)")
+        if not df_filtered.empty:
+            st.dataframe(df_filtered.sort_values('timestamp', ascending=False).head(50), use_container_width=True)
+        else:
+            st.caption("No DB data collected yet.")
 
 else:
     st.info("Waiting for data collector to populate the database...")

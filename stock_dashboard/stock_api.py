@@ -2,6 +2,8 @@ import requests
 import urllib3
 import time
 import config
+import pandas as pd
+from datetime import datetime
 
 # Suppress InsecureRequestWarning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -82,7 +84,7 @@ def search_tickers(query, max_results=10):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json",
-        "Referer": "https://finance.yahoo.com/"
+        "Referer": "https://finance.yahoo.co.jp/"
     }
     
     all_results = []
@@ -135,3 +137,40 @@ def search_tickers(query, max_results=10):
             print(f"Search exception for '{q}': {e}")
             
     return all_results
+
+
+def get_historical_prices(ticker_symbol, interval='1d', period='1mo'):
+    """
+    Fetches historical price data from Yahoo Finance.
+    Interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
+    Period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+    Returns a pandas DataFrame with 'timestamp' and 'price'.
+    """
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval={interval}&range={period}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, verify=False, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            result = data['chart']['result'][0]
+            timestamps = result['timestamp']
+            prices = result['indicators']['quote'][0]['close']
+            
+            df = pd.DataFrame({
+                'timestamp': [datetime.fromtimestamp(t) for t in timestamps],
+                'price': prices,
+                'ticker': ticker_symbol
+            })
+            
+            # Drop rows with None/NaN prices
+            df = df.dropna(subset=['price'])
+            return df
+        else:
+            print(f"Error fetching historical data for {ticker_symbol}: Status {response.status_code}")
+    except Exception as e:
+        print(f"Exception fetching historical data for {ticker_symbol}: {e}")
+        
+    return pd.DataFrame()
