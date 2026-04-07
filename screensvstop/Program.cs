@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace ScreenSvStop
 {
@@ -23,6 +24,7 @@ namespace ScreenSvStop
         private Timer revertTimer;
         private DateTime? revertEndTime;
         private Timer uiUpdateTimer;
+        private System.Threading.SynchronizationContext syncContext;
         
         private ToolStripMenuItem statusMenuItem;
         private ToolStripMenuItem enablePermMenuItem;
@@ -68,6 +70,9 @@ namespace ScreenSvStop
             uiUpdateTimer.Start();
 
             UpdateStateUI(false, "未使用");
+            
+            syncContext = System.Threading.SynchronizationContext.Current;
+            SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
             
             Application.ApplicationExit += Application_ApplicationExit;
         }
@@ -140,6 +145,36 @@ namespace ScreenSvStop
                     trayIcon.Text = string.Format("ScreenSvStop - {0}", statusStr);
                 }
             }
+
+            if (!disableMenuItem.Checked)
+            {
+                var powerStatus = SystemInformation.PowerStatus;
+                if (powerStatus.PowerLineStatus == PowerLineStatus.Offline && powerStatus.BatteryLifePercent <= 0.20f)
+                {
+                    DisablePrevention(null, null);
+                    LogAuditAction("スリープ抑止を解除 (自動/バッテリー低下)");
+                    trayIcon.ShowBalloonTip(5000, "ScreenSvStop", "バッテリー残量が20%以下になったため、安全のためにスリープ抑止を自動解除しました。", ToolTipIcon.Warning);
+                }
+            }
+        }
+
+        private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
+        {
+            if (e.Reason == SessionSwitchReason.SessionLock)
+            {
+                if (syncContext != null)
+                {
+                    syncContext.Post(state =>
+                    {
+                        if (!disableMenuItem.Checked)
+                        {
+                            DisablePrevention(null, null);
+                            LogAuditAction("スリープ抑止を解除 (自動/画面ロック)");
+                            trayIcon.ShowBalloonTip(5000, "ScreenSvStop", "画面がロックされたため、スリープ抑止を自動解除しました。", ToolTipIcon.Info);
+                        }
+                    }, null);
+                }
+            }
         }
 
         private void UpdateStateUI(bool isPreventing, string statusText)
@@ -184,6 +219,7 @@ namespace ScreenSvStop
 
         private void Application_ApplicationExit(object sender, EventArgs e)
         {
+            SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             // Ensure we clear the flag when exiting
             LogAuditAction("アプリケーション終了 (スリープ設定リセット)", true);
             AllowSleep();
