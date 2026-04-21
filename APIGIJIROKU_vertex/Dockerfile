@@ -11,11 +11,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # アプリケーションのすべてのファイルをコピー
 COPY . .
 
-# Cloud Run から渡されるポート番号（デフォルトは8080）を環境変数に設定
 ENV PORT=8080
 EXPOSE $PORT
 
+# ログなどの時間を日本時間に合わせる
+ENV TZ="Asia/Tokyo"
+
 # Streamlitの起動コマンド
 # Cloud Runでは外部からアクセスできるよう --server.address=0.0.0.0 を指定します
-# また、ファイルアップロードの上限を 200MB に拡張します
-CMD sh -c "streamlit run app.py --server.port=${PORT} --server.address=0.0.0.0 --server.maxUploadSize=200"
+CMD sh -c "streamlit run app.py --server.port=${PORT} --server.address=0.0.0.0"

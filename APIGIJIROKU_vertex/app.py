@@ -67,7 +67,7 @@ def main():
     with col1:
         st.title("🎤 音声文字起こし＆メール送信システム")
     with col2:
-        st.markdown("<div style='text-align: right; color: gray; margin-top: 20px;'>Version: 1.0.1</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: right; color: gray; margin-top: 20px;'>Version: 1.0.2</div>", unsafe_allow_html=True)
         
     st.markdown("""
         音声ファイルをアップロードしてメールアドレスを入力すると、裏側でAI（Google Gemini）が話者を分離しながら文字起こしを行い、完了次第メールでお知らせします。
@@ -116,18 +116,15 @@ def main():
         # 進行状況を表示するための空コンテナを作成
         status_container = st.empty()
 
-        with st.spinner("受付処理中..."):
-            # ファイルを一時フォルダに保存 (バックグラウンドの別スレッドから参照するため)
+        with st.spinner("受付処理中...画面を閉じずにお待ちください（完了すると画面が切り替わります）"):
+            # ファイルを一時フォルダに保存
             ext = os.path.splitext(uploaded_file.name)[1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
                 tmp_file_path = tmp_file.name
 
-            # StreamlitのUIをブロックしないように、別スレッドで処理を開始
-            thread = threading.Thread(target=process_and_send, args=(tmp_file_path, email_address, status_container))
-            # スレッド内でStreamlitウィジェットを操作するために現在のコンテキストを引き継ぐ
-            add_script_run_ctx(thread)
-            thread.start()
+            # StreamlitのUIをブロックしたまま同期で処理する（ユーザーにはスピナーを表示し続ける）
+            process_and_send(tmp_file_path, email_address, status_container)
 
 if __name__ == "__main__":
     main()

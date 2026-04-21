@@ -1,5 +1,5 @@
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part, HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types
 from google.cloud import storage
 import os
 import uuid
@@ -7,7 +7,7 @@ import mimetypes
 
 def transcribe_audio(file_path: str) -> str:
     """
-    音源ファイルをGCS経由で Google Cloud Vertex AI に渡し、話者分離付きの文字起こしを行う。
+    音源ファイルをGCS経由で Google GenAI (Vertex AI) に渡し、話者分離付きの文字起こしを行う。
     """
     project_id = os.getenv("GCP_PROJECT_ID")
     location = os.getenv("GCP_LOCATION")
@@ -16,8 +16,8 @@ def transcribe_audio(file_path: str) -> str:
     if not project_id or not location or not bucket_name:
         raise ValueError("GCP_PROJECT_ID, GCP_LOCATION, GCS_BUCKET_NAME のいずれかが設定されていません。.envファイルの設定を確認してください。")
 
-    # Vertex AI の初期化
-    vertexai.init(project=project_id, location=location)
+    # GenAI クライアントの初期化 (Vertex AI モード)
+    client = genai.Client(vertexai=True, project=project_id, location=location)
     
     # Storage クライアントの初期化とファイルアップロード
     storage_client = storage.Client(project=project_id)
@@ -34,10 +34,10 @@ def transcribe_audio(file_path: str) -> str:
     print(f"File successfully uploaded to GCS. URI: {gcs_uri}")
 
     try:
-        # Vertex AI Gemini モデルによる処理の開始
-        print("Starting transcription request with Vertex AI...")
+        # Google GenAI SDK での処理開始
+        print("Starting transcription request with Google GenAI SDK...")
         
-        # 音声のMIMEタイプを推定 (Part.from_uri には mime_type が必要です)
+        # 音声のMIMEタイプを推定
         mime_type, _ = mimetypes.guess_type(file_path)
         if mime_type is None:
             if file_path.lower().endswith('.m4a'):
@@ -47,7 +47,7 @@ def transcribe_audio(file_path: str) -> str:
             else:
                 mime_type = "audio/mpeg"
 
-        audio_part = Part.from_uri(uri=gcs_uri, mime_type=mime_type)
+        audio_part = types.Part.from_uri(file_uri=gcs_uri, mime_type=mime_type)
         
         prompt = (
             "この音声ファイルの「最初から最後まで」、一切省略せずに完全に文字起こししてください。"
@@ -57,25 +57,35 @@ def transcribe_audio(file_path: str) -> str:
             "「発言者A: 〇〇」「発言者B: △△」のように誰が話したか明確に区別できるように出力してください。"
         )
         
-        model = GenerativeModel("gemini-2.5-flash")
+        # セーフティフィルターの設定 (GenAI SDK の形式)
+        safety_settings = [
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            ),
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            ),
+        ]
         
-        # セーフティフィルターの設定
-        safety_settings = {
-            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-        }
+        config = types.GenerateContentConfig(
+            max_output_tokens=8192,
+            safety_settings=safety_settings,
+        )
         
-        generation_config = {
-            "max_output_tokens": 8192,
-        }
-        
-        response = model.generate_content(
-            [audio_part, prompt],
-            stream=True,
-            generation_config=generation_config,
-            safety_settings=safety_settings
+        response = client.models.generate_content_stream(
+            model="gemini-2.5-flash",
+            contents=[audio_part, prompt],
+            config=config,
         )
         
         transcription = ""
@@ -83,8 +93,6 @@ def transcribe_audio(file_path: str) -> str:
             try:
                 if chunk.text:
                     transcription += chunk.text
-            except ValueError as ve:
-                print(f"Skipping chunk due to ValueError: {ve}")
             except Exception as e:
                 print(f"Error accessing chunk text: {e}")
                 
