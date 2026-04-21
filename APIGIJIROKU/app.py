@@ -33,15 +33,25 @@ st.set_page_config(
 def process_and_send(file_path: str, to_email: str, status_container):
     """バックグラウンドで実行される文字起こしとメール送信処理"""
     try:
+        # 開始時間と終了予定時間の計算
+        start_time = time.time()
+        start_time_str = time.strftime('%H:%M', time.localtime(start_time))
+        # ファイルサイズに基づく終了予定時間の推測 (1MBあたり約30秒と仮定, 最低5分)
+        file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+        estimated_seconds = max(file_size_mb * 30, 300)
+        estimated_end_time = start_time + estimated_seconds
+        estimated_end_time_str = time.strftime('%H:%M', time.localtime(estimated_end_time))
+
         # 1. 文字起こし実行
-        status_container.markdown("➡️ **[1/2] AIによる音声モデル解析と文字起こしを実行中...**\n\n(大容量ファイルの場合、数十分かかることがあります)")
+        status_container.info(f"🕒 **処理開始**: {start_time_str} | ⏳ **終了予定**: {estimated_end_time_str}頃\n\n➡️ **[1/2] AIによる音声モデル解析と文字起こしを実行中...**\n(大容量ファイルの場合、数十分かかることがあります)")
         transcription = transcribe_audio(file_path)
         
         # 2. メール送信
-        status_container.markdown("➡️ **[2/2] 文字起こし完了！メールを送信しています...**")
+        status_container.info(f"🕒 **処理開始**: {start_time_str} | ⏳ **終了予定**: {estimated_end_time_str}頃\n\n➡️ **[2/2] 文字起こし完了！メールを送信しています...**")
         send_transcription_email(to_email, transcription)
         
-        status_container.success("✅ **すべての処理が正常に完了し、メールを送信しました！**")
+        end_time_str = time.strftime('%H:%M', time.localtime(time.time()))
+        status_container.success(f"✅ **すべての処理が正常に完了し、メールを送信しました！**\n(処理完了時間: {end_time_str})")
         
     except Exception as e:
         status_container.error(f"❌ エラーが発生しました:\n\n{e}")
@@ -53,14 +63,22 @@ def process_and_send(file_path: str, to_email: str, status_container):
             print(f"Deleted local temporary file: {file_path}")
 
 def main():
-    st.title("🎤 音声文字起こし＆メール送信システム")
+    col1, col2 = st.columns([8, 2])
+    with col1:
+        st.title("🎤 音声文字起こし＆メール送信システム")
+    with col2:
+        st.markdown("<div style='text-align: right; color: gray; margin-top: 20px;'>Version: 1.0.1</div>", unsafe_allow_html=True)
+        
     st.markdown("""
-    音声ファイルをアップロードしてメールアドレスを入力すると、裏側でAI（Google Gemini）が話者を分離しながら文字起こしを行い、完了次第メールでお知らせします。
+        音声ファイルをアップロードしてメールアドレスを入力すると、裏側でAI（Google Gemini）が話者を分離しながら文字起こしを行い、完了次第メールでお知らせします。
+        
+        ⚠️ **【重要】アップロード可能な音声ファイルは最大32MBまでです。**
+        （32MBを超えるファイルはエラーとなり処理できません。大きなファイルは事前に分割や圧縮をお願いいたします）
     """)
     st.divider()
 
     uploaded_file = st.file_uploader(
-        "🎙️ 音声ファイルをアップロードしてください (mp3, wav, m4a等)", 
+        "🎙️ 音声ファイルをアップロードしてください (最大32MB / mp3, wav, m4a等)", 
         type=["mp3", "wav", "m4a", "flac", "ogg", "mp4"]
     )
     

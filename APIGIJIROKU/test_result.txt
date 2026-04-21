@@ -1,0 +1,11 @@
+Loading .env file...
+✅ Loaded GEMINI_API_KEY: AIzaS...xVC7A
+
+--- Testing Gemini API ---
+✅ Gemini API Test Success!
+Reply: テスト成功
+
+--- Testing Gmail SMTP ---
+Sending test email to: y-asanuma@belluna.com
+Failed to send email to y-asanuma@belluna.com. Error: (534, b'5.7.9 Please log in with your web browser and then try again. For more\n5.7.9 information, go to\n5.7.9  https://support.google.com/mail/?p=WebLoginRequired d2e1a72fcca58-82cf9c9cbf6sm23695986b3a.52 - gsmtp')
+❌ Gmail SMTP Test Failed: (534, b'5.7.9 Please log in with your web browser and then try again. For more\n5.7.9 information, go to\n5.7.9  https://support.google.com/mail/?p=WebLoginRequired d2e1a72fcca58-82cf9c9cbf6sm23695986b3a.52 - gsmtp')

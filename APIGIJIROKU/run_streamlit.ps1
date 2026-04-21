@@ -14,4 +14,5 @@ streamlit run app.py `
     --server.port $port `
     --server.headless true `
     --server.enableCORS false `
-    --server.enableXsrfProtection false
+    --server.enableXsrfProtection false `
+    --server.maxUploadSize 200
