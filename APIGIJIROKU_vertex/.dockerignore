@@ -1,0 +1,18 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+logs/
+.git/
+.vscode/
+
+# 音声ファイルなどがローカルテスト時に生成されていれば除外する
+*.mp3
+*.wav
+*.m4a
+transcription_result.txt
