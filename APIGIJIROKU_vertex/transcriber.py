@@ -1,110 +1,112 @@
-from google import genai
-from google.genai import types
-from google.cloud import storage
 import os
-import uuid
-import mimetypes
+import time
+from dotenv import load_dotenv
+from google.cloud import speech_v1p1beta1 as speech
 
-def transcribe_audio(file_path: str) -> str:
+# .env ファイルの読み込み
+load_dotenv()
+
+def transcribe_audio(gcs_uri, project_id=None, location=None):
     """
-    音源ファイルをGCS経由で Google GenAI (Vertex AI) に渡し、話者分離付きの文字起こしを行う。
+    Speech-to-Text V1 (v1p1beta1) を使用して音声を文字起こしする (Diarization対応)
     """
-    project_id = os.getenv("GCP_PROJECT_ID")
-    location = os.getenv("GCP_LOCATION")
-    bucket_name = os.getenv("GCS_BUCKET_NAME")
-    
-    if not project_id or not location or not bucket_name:
-        raise ValueError("GCP_PROJECT_ID, GCP_LOCATION, GCS_BUCKET_NAME のいずれかが設定されていません。.envファイルの設定を確認してください。")
+    client = speech.SpeechClient()
 
-    # GenAI クライアントの初期化 (Vertex AI モード)
-    client = genai.Client(vertexai=True, project=project_id, location=location)
-    
-    # Storage クライアントの初期化とファイルアップロード
-    storage_client = storage.Client(project=project_id)
-    bucket = storage_client.bucket(bucket_name)
-    
-    # 衝突を避けるために一意のファイル名を生成
-    blob_name = f"audio_{uuid.uuid4().hex}_{os.path.basename(file_path)}"
-    blob = bucket.blob(blob_name)
-    
-    print(f"Uploading file to GCS bucket '{bucket_name}' as '{blob_name}': {file_path}")
-    blob.upload_from_filename(file_path, timeout=600)
-    
-    gcs_uri = f"gs://{bucket_name}/{blob_name}"
-    print(f"File successfully uploaded to GCS. URI: {gcs_uri}")
+    # 高精度な最新長尺モデル (latest_long) を採用
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+        language_code="ja-JP",
+        model="latest_long",
+        enable_automatic_punctuation=True,
+        enable_word_time_offsets=True,
+        diarization_config=speech.SpeakerDiarizationConfig(
+            enable_speaker_diarization=True,
+            min_speaker_count=2, # 話者が分かれやすくするため
+            max_speaker_count=10,
+        ),
+    )
 
-    try:
-        # Google GenAI SDK での処理開始
-        print("Starting transcription request with Google GenAI SDK...")
-        
-        # 音声のMIMEタイプを推定
-        mime_type, _ = mimetypes.guess_type(file_path)
-        if mime_type is None:
-            if file_path.lower().endswith('.m4a'):
-                mime_type = "audio/m4a"
-            elif file_path.lower().endswith('.mp4'):
-                mime_type = "video/mp4"
-            else:
-                mime_type = "audio/mpeg"
+    audio = speech.RecognitionAudio(uri=gcs_uri)
 
-        audio_part = types.Part.from_uri(file_uri=gcs_uri, mime_type=mime_type)
+    print(f"Starting long running recognition (V1) for {gcs_uri}...")
+    operation = client.long_running_recognize(config=config, audio=audio)
+    
+    # 完了を待機
+    response = operation.result(timeout=3600)
+    print("Recognition completed.")
+
+    if not response.results:
+        return "文字起こしの結果がありませんでした。"
+
+    # 話者分離結果の構築 (複数仕様に堅牢に対応するロジック)
+    valid_results = []
+    has_meaningful_tags = False
+    
+    # 1. 各リザルトからプレーンテキストと話者タグを回収
+    for result in response.results:
+        alt = result.alternatives[0]
+        transcript = alt.transcript.strip()
         
-        prompt = (
-            "この音声ファイルの「最初から最後まで」、一切省略せずに完全に文字起こししてください。"
-            "要約や途中での打ち切りは絶対にしないでください。"
-            "音声には複数の人が話している可能性があります。"
-            "発言者ごとに分けて、改行を入れ、"
-            "「発言者A: 〇〇」「発言者B: △△」のように誰が話したか明確に区別できるように出力してください。"
-        )
-        
-        # セーフティフィルターの設定 (GenAI SDK の形式)
-        safety_settings = [
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
-            ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
-            ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
-            ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
-            ),
-        ]
-        
-        config = types.GenerateContentConfig(
-            max_output_tokens=8192,
-            safety_settings=safety_settings,
-        )
-        
-        response = client.models.generate_content_stream(
-            model="gemini-2.5-flash",
-            contents=[audio_part, prompt],
-            config=config,
-        )
-        
-        transcription = ""
-        for chunk in response:
-            try:
-                if chunk.text:
-                    transcription += chunk.text
-            except Exception as e:
-                print(f"Error accessing chunk text: {e}")
-                
-        if not transcription:
-            transcription = "文字起こし結果を取得できませんでした。"
+        # 集約用リザルト（transcriptが空）の場合はスキップ
+        if not transcript:
+            continue
             
-    finally:
-        # GCSから一時ファイルを削除してクリーンアップ
-        try:
-            blob.delete()
-            print(f"Cleaned up file from GCS: {gcs_uri}")
-        except Exception as e:
-            print(f"Warning: Failed to delete file {gcs_uri} from GCS: {e}")
-
-    return transcription
+        speaker = 0
+        if hasattr(alt, 'words') and alt.words:
+            tags = [w.speaker_tag for w in alt.words if hasattr(w, 'speaker_tag') and w.speaker_tag > 0]
+            if tags:
+                has_meaningful_tags = True
+                speaker = max(set(tags), key=tags.count)
+                
+        valid_results.append((speaker, transcript))
+        
+    if has_meaningful_tags and valid_results:
+        # 新仕様：各セグメントに正しくタグ情報が付与されている場合
+        # 句読点（スマートパンクチュエーション）が保持された transcript を使うため最も高品質
+        full_transcript = []
+        prev_spk = valid_results[0][0]
+        curr_text = valid_results[0][1]
+        
+        for spk, text in valid_results[1:]:
+            if spk == prev_spk:
+                curr_text += " " + text
+            else:
+                full_transcript.append(f"話者 {prev_spk}: {curr_text}")
+                prev_spk = spk
+                curr_text = text
+                
+        full_transcript.append(f"話者 {prev_spk}: {curr_text}")
+        return "\n\n".join(full_transcript)
+        
+    else:
+        # 旧仕様：最後のリザルトにのみ、すべての単語配列が集約されている場合
+        last_result = response.results[-1]
+        words_info = last_result.alternatives[0].words if hasattr(last_result.alternatives[0], 'words') else []
+        
+        if not words_info:
+            # タグが完全に取得できなかった場合、結合したプレーンテキストをフォールバックとして返す
+            return "\n\n".join([r.alternatives[0].transcript for r in response.results if hasattr(r, 'alternatives') and r.alternatives and r.alternatives[0].transcript.strip()])
+             
+        full_transcript = []
+        current_speaker = None
+        current_text = ""
+        
+        for w in words_info:
+            spk = w.speaker_tag if hasattr(w, 'speaker_tag') else 0
+            # 「また|マタ」などの読みが付属する場合があるので | でスプリットする
+            clean_word = w.word.split('|')[0]
+            
+            if current_speaker is None:
+                current_speaker = spk
+                current_text = clean_word
+            elif spk != current_speaker:
+                full_transcript.append(f"話者 {current_speaker}: {current_text}")
+                current_speaker = spk
+                current_text = clean_word
+            else:
+                current_text += clean_word
+                
+        if current_text:
+            full_transcript.append(f"話者 {current_speaker}: {current_text}")
+            
+        return "\n\n".join(full_transcript)

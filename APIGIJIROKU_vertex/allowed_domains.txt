@@ -2,3 +2,22 @@
 # 1行に1ドメインずつ記述してください（例: example.com, belluna.co.jp）
 belluna.co.jp
 belluna.com
+daily-3.com
+frndly.co.jp
+granbellhotel.jp
+hamahiga-resort.jp
+hc-refre.co.jp
+infirmiere.co.jp
+jozankeiview.com
+labeldm.com
+lakeresort.jp
+legrand-karuizawares
+marilyn.ne.jp
+marucho.jp
+newakanhotel.co.jp
+nursery.co.jp
+ozio.co.jp
+select-kk.jp
+toyasunpalace.co.jp
+yuukaen.jp
+zouk-tokyo.com
