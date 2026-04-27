@@ -110,7 +110,7 @@ def main():
     target_email = get_query_param("email")
 
     # バージョン表示
-    st.markdown('<div style="text-align: right; color: gray; font-size: 0.8em;">v3.2.0</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: right; color: gray; font-size: 0.8em;">v3.3.0</div>', unsafe_allow_html=True)
     
     st.title("🎤 音声文字起こし＆メール送信")
     st.divider()
@@ -169,7 +169,7 @@ def main():
         </div>
 
         <script>
-        console.log("Upload Component loaded (v3.2.0)");
+        console.log("Upload Component loaded (v3.3.0)");
         const fileUploader = document.getElementById('file-uploader');
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
