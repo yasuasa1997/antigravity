@@ -3,6 +3,8 @@ FROM python:3.11-slim
 # 作業ディレクトリの設定
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y ffmpeg
+
 # 依存パッケージのインストール
 # 先に requirements.txt をコピーしてキャッシュを活かします
 COPY requirements.txt .
