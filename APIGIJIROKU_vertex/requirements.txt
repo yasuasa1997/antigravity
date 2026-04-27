@@ -1,4 +1,6 @@
 streamlit
-google-cloud-aiplatform
+google-genai
 google-cloud-storage
+google-cloud-speech
 python-dotenv
+requests

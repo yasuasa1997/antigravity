@@ -1,133 +1,239 @@
 import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
 import os
-import tempfile
-import threading
 import time
+import uuid
+import datetime
+import google.auth
+import google.auth.transport.requests
+import requests
 from dotenv import load_dotenv
+from google.cloud import storage
 
 from transcriber import transcribe_audio
 from mailer import send_transcription_email
+
+# 環境変数の読み込み (.env)
+load_dotenv()
 
 def load_allowed_domains(file_path="allowed_domains.txt"):
     """許可されたドメインのリストをファイルから読み込む"""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            # コメント行や空行を除外してリスト化
             domains = [line.strip() for line in f if line.strip() and not line.startswith("#")]
         return domains
     except FileNotFoundError:
-        # ファイルがない場合は制限なしとするかエラーにするか運用次第ですが、今回はエラーにします
-        st.error("⚠️ allowed_domains.txt が見つかりません。システム管理者にお問い合わせください。")
+        st.error("⚠️ allowed_domains.txt が見つかりません。")
         return []
 
-# 環境変数の読み込み (.env)
-load_dotenv()
+def generate_upload_session_url(blob_name):
+    """GCSのレジュマブルアップロードセッションURLを生成する"""
+    storage_client = storage.Client()
+    bucket_name = os.getenv("GCS_BUCKET_NAME")
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+
+    # 動的にオリジン（アクセス元URL）を取得するように変更
+    try:
+        # Streamlit 1.34+ の st.context.headers を使用
+        origin = st.context.headers.get("origin")
+        if not origin:
+            # Originヘッダーがない場合、Hostヘッダーから組み立てる
+            host = st.context.headers.get("host")
+            if host:
+                if "localhost" in host or "127.0.0.1" in host:
+                    origin = f"http://{host}"
+                else:
+                    origin = f"https://{host}"
+    except Exception:
+        origin = None
+        
+    # フォールバック（以前のハードコードされたもの）
+    if not origin:
+        origin = "https://apigijiroku-run-service-jvlukp7iqq-an.a.run.app"
+    
+    # 署名付きURL（Signed URL）の代わりに、レジュマブルアップロードセッションを使用します。
+    # GCSはここで指定されたoriginからのアクセスのみを許可します。
+    session_url = blob.create_resumable_upload_session(
+        content_type="application/octet-stream",
+        origin=origin
+    )
+    return session_url
 
 st.set_page_config(
-    page_title="音声文字起こし＆メール送信",
+    page_title="音声文字起こし＆メール送信 (Serverless)",
     page_icon="🎤",
     layout="centered"
 )
 
-def process_and_send(file_path: str, to_email: str, status_container):
-    """バックグラウンドで実行される文字起こしとメール送信処理"""
+def process_gcs_file(gcs_uri: str, to_email: str, status_container):
+    """GCS上のファイルを処理してメール送信する"""
     try:
-        # 開始時間と終了予定時間の計算
         start_time = time.time()
         start_time_str = time.strftime('%H:%M', time.localtime(start_time))
-        # ファイルサイズに基づく終了予定時間の推測 (1MBあたり約30秒と仮定, 最低5分)
-        file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
-        estimated_seconds = max(file_size_mb * 30, 300)
-        estimated_end_time = start_time + estimated_seconds
-        estimated_end_time_str = time.strftime('%H:%M', time.localtime(estimated_end_time))
-
-        # 1. 文字起こし実行
-        status_container.info(f"🕒 **処理開始**: {start_time_str} | ⏳ **終了予定**: {estimated_end_time_str}頃\n\n➡️ **[1/2] AIによる音声モデル解析と文字起こしを実行中...**\n(大容量ファイルの場合、数十分かかることがあります)")
-        transcription = transcribe_audio(file_path)
+        
+        status_container.info(f"🕒 **処理開始**: {start_time_str}\n\n➡️ **[1/2] AIによる音声解析を実行中...**\n(Cloud Run環境を維持するため、ストレージ直接連携で処理しています)")
+        
+        # 1. 文字起こし実行 (GCS URIを直接渡す)
+        transcription = transcribe_audio(gcs_uri=gcs_uri)
         
         # 2. メール送信
-        status_container.info(f"🕒 **処理開始**: {start_time_str} | ⏳ **終了予定**: {estimated_end_time_str}頃\n\n➡️ **[2/2] 文字起こし完了！メールを送信しています...**")
+        status_container.info(f"🕒 **処理開始**: {start_time_str}\n\n➡️ **[2/2] 完了！メールを送信しています...**")
         send_transcription_email(to_email, transcription)
         
         end_time_str = time.strftime('%H:%M', time.localtime(time.time()))
-        status_container.success(f"✅ **すべての処理が正常に完了し、メールを送信しました！**\n(処理完了時間: {end_time_str})")
+        status_container.success(f"✅ **正常に完了しました！**\n(完了時間: {end_time_str})")
         
     except Exception as e:
-        status_container.error(f"❌ エラーが発生しました:\n\n{e}")
-        print(f"Error occurred during processing: {e}")
-    finally:
-        # 3. 一時ファイルの削除
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"Deleted local temporary file: {file_path}")
+        status_container.error(f"❌ エラーが発生しました: {e}")
+
+def get_query_param(key, default=None):
+    """バージョン互換性を考慮してクエリパラメータを取得する"""
+    try:
+        if hasattr(st, "query_params"):
+            val = st.query_params.get(key, default)
+            return val
+    except Exception:
+        pass
+    
+    try:
+        params = st.experimental_get_query_params()
+        if key in params:
+            return params[key][0]
+    except Exception:
+        pass
+    
+    return default
 
 def main():
-    col1, col2 = st.columns([8, 2])
-    with col1:
-        st.title("🎤 音声文字起こし＆メール送信システム")
-    with col2:
-        st.markdown("<div style='text-align: right; color: gray; margin-top: 20px;'>Version: 1.0.1</div>", unsafe_allow_html=True)
-        
-    st.markdown("""
-        音声ファイルをアップロードしてメールアドレスを入力すると、裏側でAI（Google Gemini）が話者を分離しながら文字起こしを行い、完了次第メールでお知らせします。
-        
-        ⚠️ **【重要】アップロード可能な音声ファイルは最大32MBまでです。**
-        （32MBを超えるファイルはエラーとなり処理できません。大きなファイルは事前に分割や圧縮をお願いいたします）
-    """)
+    # クエリパラメータからアップロード済みの情報を取得
+    uploaded_gcs_uri = get_query_param("gcs_uri")
+    target_email = get_query_param("email")
+
+    # バージョン表示
+    st.markdown('<div style="text-align: right; color: gray; font-size: 0.8em;">v3.2.0</div>', unsafe_allow_html=True)
+    
+    st.title("🎤 音声文字起こし＆メール送信")
     st.divider()
 
-    uploaded_file = st.file_uploader(
-        "🎙️ 音声ファイルをアップロードしてください (最大32MB / mp3, wav, m4a等)", 
-        type=["mp3", "wav", "m4a", "flac", "ogg", "mp4"]
-    )
-    
-    email_address = st.text_input("📧 結果を受け取るメールアドレスを入力してください")
-
-    if st.button("文字起こしを開始", type="primary"):
-        if not uploaded_file:
-            st.error("⚠️ 音声ファイルをアップロードしてください。")
-            return
+    if uploaded_gcs_uri and target_email:
+        # アップロード完了後の処理画面
+        st.success(f"✅ アップロード完了: {os.path.basename(uploaded_gcs_uri)}")
+        if st.button("もう一度最初から"):
+            st.query_params.clear()
+            st.rerun()
             
-        if not email_address:
-            st.error("⚠️ メールアドレスを入力してください。")
-            return
-
-        # ドメインのバリデーション処理
-        allowed_domains = load_allowed_domains()
-        if not allowed_domains:
-            return # ドメインファイルの読み込みに失敗した場合は処理中断
-            
-        # 入力されたメールアドレスからドメイン部分（@以降）を抽出
-        if "@" not in email_address:
-            st.error("⚠️ 有効なメールアドレスを入力してください。")
-            return
-            
-        domain_part = email_address.split("@")[-1]
-        if domain_part not in allowed_domains:
-            st.error(f"⚠️ 指定されたドメイン ({domain_part}) への送信は許可されていません。許可されたドメインを入力してください。")
-            return
-
-        st.success("✅ 受付を完了しました！処理が裏側で開始されました。")
-        st.info(
-            "処理には数十分かかる場合があります。この画面を閉じても処理は続行されます。\n"
-        )
-        
-        # 進行状況を表示するための空コンテナを作成
         status_container = st.empty()
+        process_gcs_file(uploaded_gcs_uri, target_email, status_container)
+        return
 
-        with st.spinner("受付処理中..."):
-            # ファイルを一時フォルダに保存 (バックグラウンドの別スレッドから参照するため)
-            ext = os.path.splitext(uploaded_file.name)[1]
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                tmp_file_path = tmp_file.name
+    # 入力画面
+    email_address = st.text_input("📧 結果を受け取るメールアドレス", value=st.session_state.get("email", ""))
+    st.session_state["email"] = email_address
 
-            # StreamlitのUIをブロックしないように、別スレッドで処理を開始
-            thread = threading.Thread(target=process_and_send, args=(tmp_file_path, email_address, status_container))
-            # スレッド内でStreamlitウィジェットを操作するために現在のコンテキストを引き継ぐ
-            add_script_run_ctx(thread)
-            thread.start()
+    # ドメインチェック
+    allowed_domains = load_allowed_domains()
+    is_email_valid = False
+    if email_address:
+        if "@" in email_address:
+            domain_part = email_address.split("@")[-1]
+            if domain_part in allowed_domains:
+                is_email_valid = True
+            else:
+                st.warning(f"⚠️ {domain_part} は許可されていないドメインです。")
+        else:
+            st.warning("⚠️ 有効なメールアドレスを入力してください。")
+    
+    if is_email_valid:
+        if "blob_name" not in st.session_state:
+            st.session_state["blob_name"] = f"direct_upload_{uuid.uuid4().hex}.mp3"
+        
+        blob_name = st.session_state["blob_name"]
+        upload_url = generate_upload_session_url(blob_name)
+        gcs_uri = f"gs://{os.getenv('GCS_BUCKET_NAME')}/{blob_name}"
+
+        st.info("👇 1. ファイルを選択してアップロード（最大200MB）")
+        
+        cache_buster = int(time.time())
+        upload_html = f"""
+        <div style="text-align: center; font-family: sans-serif; border: 2px dashed #ccc; padding: 20px; border-radius: 10px;">
+            <input type="file" id="file-uploader" accept="audio/*" style="display: none;">
+            <label for="file-uploader" id="label" style="cursor: pointer; background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+                ファイルを選択してアップロード開始
+            </label>
+            <div id="progress-container" style="margin-top: 20px; display: none;">
+                <div style="width: 100%; background-color: #f3f3f3; border-radius: 10px; height: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                    <div id="progress-bar" style="width: 0%; height: 100%; background-color: #28a745; border-radius: 10px; transition: width 0.3s ease-in-out;"></div>
+                </div>
+                <div id="progress-text" style="margin-top: 10px; font-weight: bold; color: #555;">0%</div>
+            </div>
+        </div>
+
+        <script>
+        console.log("Upload Component loaded (v3.2.0)");
+        const fileUploader = document.getElementById('file-uploader');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const label = document.getElementById('label');
+
+        fileUploader.addEventListener('change', (event) => {{
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 200 * 1024 * 1024) {{
+                alert("200MBを超えるファイルはアップロードできません。");
+                return;
+            }}
+
+            label.style.display = 'none';
+            progressContainer.style.display = 'block';
+            progressText.innerText = '📤 アップロード中... (0%)';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', '{upload_url}', true);
+            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+
+            xhr.upload.onprogress = (e) => {{
+                if (e.lengthComputable) {{
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.innerText = '📤 アップロード中... (' + percent + '%)';
+                }}
+            }};
+
+            xhr.onload = () => {{
+                if (xhr.status === 200 || xhr.status === 201) {{
+                    progressText.innerHTML = '<p style="color: #28a745; font-size: 1.1em; margin: 10px 0;">✅ アップロード完了！<br><br><b>【重要】</b> 下にある赤色の「文字起こしを開始する」ボタンをクリックしてください。</p>';
+                }} else {{
+                    progressText.innerText = '❌ アップロード失敗 (Status: ' + xhr.status + ')';
+                    label.style.display = 'inline-block';
+                }}
+            }};
+
+            xhr.onerror = () => {{
+                progressText.innerText = '❌ エラーが発生しました';
+                label.style.display = 'inline-block';
+            }};
+
+            xhr.send(file);
+        }});
+        </script>
+        """
+        st.components.v1.html(upload_html, height=180)
+
+        st.write("") 
+        st.info("👇 2. アップロード完了後にクリックしてください")
+        
+        if st.button("🚀 文字起こしを開始する", use_container_width=True, type="primary", key="start_transcription_btn"):
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(os.getenv("GCS_BUCKET_NAME"))
+            if bucket.blob(blob_name).exists():
+                status_container = st.empty()
+                process_gcs_file(gcs_uri, email_address, status_container)
+                if "blob_name" in st.session_state:
+                    del st.session_state["blob_name"]
+            else:
+                st.error("⚠️ まだアップロードが完了していないか、ファイルが見つかりません。アップロード完了メッセージが出るまでお待ちください。")
 
 if __name__ == "__main__":
     main()

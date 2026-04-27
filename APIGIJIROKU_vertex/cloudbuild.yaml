@@ -27,9 +27,8 @@ steps:
       - '3600'                                    # 処理が長引いた場合に備え、タイムアウトを3600秒（最大）に設定
       - '--no-cpu-throttling'                     # StreamlitのUIから切り離した「別スレッド処理(バックグラウンド処理)」をストップさせないために必須設定
       
-      # [注意] 環境変数はCloud Run側（GCPコンソール画面など）で事前に設定するか、以下の行のコメントアウトを外してCloud BuildのSubstitution変数経由で渡します
-      # - '--set-env-vars'
-      # - 'GCP_PROJECT_ID=mojiokosi-492606,GCP_LOCATION=asia-northeast1,GCS_BUCKET_NAME=moji-be11una-okosi,SMTP_SERVER=$_SMTP_SERVER,SMTP_PORT=$_SMTP_PORT,SMTP_USERNAME=$_SMTP_USERNAME,SMTP_PASSWORD=$_SMTP_PASSWORD'
+      - '--update-env-vars'
+      - 'GCP_LOCATION=us-central1,GCP_PROJECT_ID=mojiokosi-492606,GCS_BUCKET_NAME=moji-be11una-okosi'
 
 images:
   - 'gcr.io/$PROJECT_ID/apigijiroku-app:latest'

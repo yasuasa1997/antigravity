@@ -1,0 +1,5 @@
+ERROR: (gcloud.compute.resource-policies.create.instance-schedule) unrecognized arguments:
+  --start-cron=0 8 * * *
+  --stop-cron=0 21 * * *
+  To search the help text of gcloud commands, run:
+  gcloud help -- SEARCH_TERMS
