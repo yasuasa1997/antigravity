@@ -22,13 +22,15 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'                 # 一般公開（UIから誰でもアクセス可能にする）
       - '--memory'
-      - '2Gi'                                     # ファイルアップロード等に対応するためメモリを2GBに設定
+      - '8Gi'                                     # pydubでの長時間の音声処理（非圧縮展開）時のメモリ枯渇を防ぐため8GBに拡張
+      - '--cpu'
+      - '2'                                       # 8GBのメモリを割り当てるにはCPUが2つ以上必要です
       - '--timeout'
       - '3600'                                    # 処理が長引いた場合に備え、タイムアウトを3600秒（最大）に設定
       - '--no-cpu-throttling'                     # StreamlitのUIから切り離した「別スレッド処理(バックグラウンド処理)」をストップさせないために必須設定
       
       - '--update-env-vars'
-      - 'GCP_LOCATION=us-central1,GCP_PROJECT_ID=mojiokosi-492606,GCS_BUCKET_NAME=moji-be11una-okosi'
+      - 'GCP_LOCATION=asia-northeast1,GCP_PROJECT_ID=mojiokosi-492606,GCS_BUCKET_NAME=moji-be11una-okosi'
 
 images:
   - 'gcr.io/$PROJECT_ID/apigijiroku-app:latest'
