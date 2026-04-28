@@ -1,151 +1,150 @@
 import os
 import time
 import tempfile
+import uuid
+from pydub import AudioSegment
 from dotenv import load_dotenv
-from google.cloud import speech_v1p1beta1 as speech
+from google import genai
+from google.genai import types
 from google.cloud import storage
 
 # .env ファイルの読み込み
 load_dotenv()
 
-def get_sample_rate(audio_file_path):
-    """
-    pydubを使用して音声ファイルの正確なサンプリングレートを取得します
-    """
-    try:
-        from pydub import AudioSegment
-        audio = AudioSegment.from_file(audio_file_path)
-        return audio.frame_rate
-    except Exception as e:
-        print(f"pydubでのサンプルレート取得に失敗しました: {e}")
-        return 44100 # デフォルト値
-
 def transcribe_audio(gcs_uri, project_id=None, location=None):
     """
-    Speech-to-Text V1 (v1p1beta1) を使用して音声を文字起こしする (Diarization対応・サンプリングレート自動取得)
+    音声を30分チャンクに分割し、Gemini 1.5 Proを用いて高精度に話者分離と文字起こしを行う
     """
-    client = speech.SpeechClient()
     storage_client = storage.Client()
 
-    # GCSから一時的にファイルをダウンロードしてサンプリングレートを解析
-    try:
-        parts = gcs_uri.replace("gs://", "").split("/", 1)
-        bucket_name = parts[0]
-        blob_name = parts[1]
-        
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
-            temp_file_path = temp_file.name
-            print(f"Downloading {gcs_uri} to {temp_file_path} for sample rate detection...")
-            blob.download_to_filename(temp_file_path)
+    # GCS URIの解析
+    parts = gcs_uri.replace("gs://", "").split("/", 1)
+    bucket_name = parts[0]
+    blob_name = parts[1]
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
 
-        sample_rate = get_sample_rate(temp_file_path)
-        print(f"Detected exact sample rate: {sample_rate} Hz")
-        
+    print(f"Downloading {gcs_uri} for chunking...")
+    
+    # 元の音声ファイルを一時ダウンロード
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+        temp_file_path = temp_file.name
+        blob.download_to_filename(temp_file_path)
+
+    # pydubで音声を分割 (30分 = 30 * 60 * 1000 ms)
+    # チャンクサイズはメモリとGeminiの最適コンテキスト長を考慮
+    print("Splitting audio into chunks...")
+    try:
+        audio = AudioSegment.from_file(temp_file_path)
+    except Exception as e:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-            
+        return f"音声ファイルの読み込みに失敗しました（ffmpegが正しくインストールされていないか、非対応フォーマットです）。エラー: {e}"
+
+    chunk_length_ms = 15 * 60 * 1000
+    total_ms = len(audio)
+    
+    chunks = []
+    for i in range(0, total_ms, chunk_length_ms):
+        chunks.append(audio[i:i+chunk_length_ms])
+
+    print(f"Total chunks created: {len(chunks)} ({total_ms / 60000:.2f} minutes total)")
+    
+    # ローカルの元一時ファイルはもう不要なので削除
+    if os.path.exists(temp_file_path):
+        os.remove(temp_file_path)
+
+    # Gemini クライアントの初期化
+    # Vertex AIを利用 (Workload Identity または 環境変数から自動認証)
+    pid = project_id or os.getenv("GCP_PROJECT_ID")
+    # 完全固定でリージョンを指定し、環境変数レベルでも強制する
+    loc = "asia-northeast1"
+    os.environ["GOOGLE_CLOUD_REGION"] = loc
+    os.environ["GOOGLE_CLOUD_LOCATION"] = loc
+    
+    try:
+        if not pid:
+            try:
+                import google.auth
+                _, pid = google.auth.default()
+            except Exception:
+                pass
+
+        if pid:
+            print(f"Initializing Gemini Client with Vertex AI (project={pid}, location={loc})")
+            client = genai.Client(vertexai=True, project=pid, location=loc)
+        elif os.getenv("GEMINI_API_KEY"):
+            print("Initializing Gemini Client with API Key")
+            client = genai.Client()
+        else:
+            print(f"Initializing Gemini Client with default credentials (location={loc})")
+            client = genai.Client(vertexai=True, location=loc)
     except Exception as e:
-        print(f"サンプリングレートの自動検出でエラーが発生しました。デフォルトの44100Hzを使用します: {e}")
-        sample_rate = 44100
+        print(f"GenAI Client Init fallback directly to Client(): {e}")
+        client = genai.Client(vertexai=True, location=loc)
 
-    # 認識設定
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.MP3,
-        sample_rate_hertz=sample_rate, # これが話者分離機能を確実に動作させるための最重要パラメータ
-        language_code="ja-JP",
-        model="latest_long",
-        enable_automatic_punctuation=True,
-        enable_word_time_offsets=True,
-        diarization_config=speech.SpeakerDiarizationConfig(
-            enable_speaker_diarization=True,
-            min_speaker_count=1, # 指定により1人に設定
-            max_speaker_count=10, # 指定により10人に設定
-        ),
-    )
+    prompt = """
+あなたはプロの議事録作成および音声の文字起こしオペレーターです。
+提供された音声データから、誰が何を話したかを正確に書き起こしてください。
+以下の条件を厳守してください：
+1. 会話の時系列順に発言を記述すること。
+2. 必ず「話者A: 」「話者B: 」のように発言者を特定し、話者が交代するたびに改行して記載すること。(A, B, Cなどアルファベットで区別)
+3. 句読点のない読みにくいテキストではなく、自然で読みやすい句読点を補った日本語で記述すること。
+4. 【重要】無音区間や背景音のみで誰も話していない場合は「[無音]」とだけ出力し、絶対にテキストを捏造（ハルシネーション）しないこと。
+5. 【重要】「はい。」や「あー」などの同じ相槌を異常な回数繰り返すエラー（ループ）を絶対に起こさないこと。会話の内容が存在しない場合は省略して構いません。
+6. Markdownの過剰な装飾（太字など）は避け、シンプルなテキストベースで出力すること。
+"""
 
-    audio = speech.RecognitionAudio(uri=gcs_uri)
-
-    print(f"Starting long running recognition (V1) at {sample_rate}Hz for {gcs_uri}...")
-    operation = client.long_running_recognize(config=config, audio=audio)
+    full_transcript = []
     
-    # 完了を待機
-    response = operation.result(timeout=3600)
-    print("Recognition completed.")
-
-    if not response.results:
-        return "文字起こしの結果がありませんでした。"
-
-    # 話者分離結果の構築 (B案：時系列順かつ句読点を維持する堅牢なロジック)
-    valid_results = []
-    has_meaningful_tags = False
-    
-    # 1. 各リザルトからプレーンテキストと話者タグを回収
-    for result in response.results:
-        alt = result.alternatives[0]
-        transcript = alt.transcript.strip()
+    # チャンクごとに処理
+    for idx, chunk in enumerate(chunks):
+        print(f"Processing chunk {idx + 1} / {len(chunks)}")
         
-        # 集約用リザルト（transcriptが空）の場合はスキップ
-        if not transcript:
-            continue
+        # 1. チャンクをローカルに一時保存
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as chunk_temp_file:
+            chunk_local_path = chunk_temp_file.name
+            chunk.export(chunk_local_path, format="mp3")
             
-        speaker = 0
-        if hasattr(alt, 'words') and alt.words:
-            tags = [w.speaker_tag for w in alt.words if hasattr(w, 'speaker_tag') and w.speaker_tag > 0]
-            if tags:
-                has_meaningful_tags = True
-                speaker = max(set(tags), key=tags.count)
-                
-        valid_results.append((speaker, transcript))
+        # 2. チャンクをGCSにアップロード (Gemini API はURIを受け取るため)
+        chunk_blob_name = f"chunks/{uuid.uuid4()}_chunk_{idx}.mp3"
+        chunk_blob = bucket.blob(chunk_blob_name)
+        chunk_blob.upload_from_filename(chunk_local_path)
+        chunk_gcs_uri = f"gs://{bucket_name}/{chunk_blob_name}"
         
-    if has_meaningful_tags and valid_results:
-        # 新仕様：各セグメントに正しくタグ情報が付与されている場合
-        # 句読点が保持された transcript を使うため最も高品質
-        full_transcript = []
-        prev_spk = valid_results[0][0]
-        curr_text = valid_results[0][1]
+        print(f"Chunk uploaded to: {chunk_gcs_uri}. Sending to Gemini 2.5 Flash...")
         
-        for spk, text in valid_results[1:]:
-            if spk == prev_spk:
-                curr_text += " " + text
-            else:
-                full_transcript.append(f"話者 {prev_spk}: {curr_text}")
-                prev_spk = spk
-                curr_text = text
-                
-        full_transcript.append(f"話者 {prev_spk}: {curr_text}")
-        return "\n\n".join(full_transcript)
-        
-    else:
-        # 旧仕様：最後のリザルトにのみ、すべての単語配列が集約されている場合
-        # Zenn記事の抽出ロジックに類似するフォールバック（時系列に出力）
-        last_result = response.results[-1]
-        words_info = last_result.alternatives[0].words if hasattr(last_result.alternatives[0], 'words') else []
-        
-        if not words_info:
-            return "\n\n".join([r.alternatives[0].transcript for r in response.results if hasattr(r, 'alternatives') and r.alternatives and r.alternatives[0].transcript.strip()])
-             
-        full_transcript = []
-        current_speaker = None
-        current_text = ""
-        
-        for w in words_info:
-            spk = w.speaker_tag if hasattr(w, 'speaker_tag') else 0
-            clean_word = w.word.split('|')[0]
+        # 3. Geminiにリクエスト
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=[
+                    types.Part.from_uri(file_uri=chunk_gcs_uri, mime_type="audio/mp3"),
+                    prompt
+                ],
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                )
+            )
+            # パートごとに区切りを入れて結合
+            result_text = response.text.strip() if response.text else "[音声が認識されなかったか、テキストが生成されませんでした]"
+            full_transcript.append(f"【パート {idx + 1}】（おおよそ {idx*15}分 〜 {(idx+1)*15}分 の区間）\n{result_text}")
+            print(f"Chunk {idx + 1} processing complete.")
             
-            if current_speaker is None:
-                current_speaker = spk
-                current_text = clean_word
-            elif spk != current_speaker:
-                full_transcript.append(f"話者 {current_speaker}: {current_text}")
-                current_speaker = spk
-                current_text = clean_word
-            else:
-                current_text += clean_word
-                
-        if current_text:
-            full_transcript.append(f"話者 {current_speaker}: {current_text}")
+        except Exception as e:
+            print(f"Error processing chunk {idx + 1}: {e}")
+            full_transcript.append(f"【パート {idx + 1}】\n[文字起こし失敗: Gemini APIでエラーが発生しました - {e}]")
             
-        return "\n\n".join(full_transcript)
+        # 4. クリーンアップ (ローカルとGCS)
+        if os.path.exists(chunk_local_path):
+            os.remove(chunk_local_path)
+            
+        try:
+            chunk_blob.delete()
+            print(f"Deleted temporary chunk from GCS: {chunk_blob_name}")
+        except Exception as e:
+            print(f"Failed to delete {chunk_gcs_uri} from GCS: {e}")
+            
+    # 全てのチャンクを結合して返す
+    final_text = "\n\n---\n\n".join(full_transcript)
+    return final_text
