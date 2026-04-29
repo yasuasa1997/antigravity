@@ -14,7 +14,6 @@ from mailer import send_transcription_email
 
 # 環境変数の読み込み (.env)
 load_dotenv()
-
 def load_allowed_domains(file_path="allowed_domains.txt"):
     """許可されたドメインのリストをファイルから読み込む"""
     try:
